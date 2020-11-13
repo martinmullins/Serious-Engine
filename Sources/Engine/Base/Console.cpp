@@ -257,9 +257,19 @@ void CConsole::CloseLog(void)
 // Print formated text to the main console.
 void CPrintF(const char *strFormat, ...)
 {
+  #ifdef EMSCRIPTEN
+    va_list args;
+    va_start(args, strFormat);
+    vprintf(strFormat, args);
+    va_end(args);
+    fflush(stdout);
+    return;
+  #endif
+
   if (_pConsole==NULL) {
     return;
   }
+
   // format the message in buffer
   va_list arg;
   va_start(arg, strFormat);
