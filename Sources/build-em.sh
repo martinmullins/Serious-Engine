@@ -33,10 +33,23 @@ mk() {
   emmake make -C cmake-em-build EntitiesMP
   emmake make -C cmake-em-build GameMP
   emmake make -C cmake-em-build Shaders
+  emmake make -C cmake-em-build
 }
 
 mktarg() {
-  emmake make -C cmake-em-build VERBOSE=1 "$1"
+  if [[ -n "$1" ]]; then
+    emmake make -C cmake-em-build VERBOSE=1 "$1"
+  else
+    emmake make -C cmake-em-build VERBOSE=1 
+  fi
+}
+
+cpfiles() {
+  cp -vr "$GIT_ROOT"/template/* cmake-em-build/
+}
+
+serveit() {
+  serve "$GIT_ROOT"/cmake-em-build/
 }
 
 $*
