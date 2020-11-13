@@ -27,7 +27,7 @@ public:
 
 BOOL _bCameraOn=FALSE;
 CTFileStream _strScript;
-BOOL _bInitialized;
+BOOL _bCamInitialized;
 FLOAT _fStartTime;
 CCameraPos _cp0;
 CCameraPos _cp1;
@@ -139,7 +139,7 @@ void CAM_Start(const CTFileName &fnmDemo)
     };
   }
   _bCameraOn = TRUE;
-  _bInitialized = FALSE;
+  _bCamInitialized = FALSE;
 }
 void CAM_Stop(void)
 {
@@ -152,8 +152,8 @@ void CAM_Stop(void)
 void CAM_Render(CEntity *pen, CDrawPort *pdp)
 {
   if( cam_bRecord) {
-    if (!_bInitialized) {
-      _bInitialized = TRUE;
+    if (!_bCamInitialized) {
+      _bCamInitialized = TRUE;
       SetSpeed(1.0f);
       _fStartTime = _pTimer->CurrentTick();
     }
@@ -191,8 +191,8 @@ void CAM_Render(CEntity *pen, CDrawPort *pdp)
     }
 
   } else {
-    if (!_bInitialized) {
-      _bInitialized = TRUE;
+    if (!_bCamInitialized) {
+      _bCamInitialized = TRUE;
       ReadPos(_cp0);
       ReadPos(_cp1);
       SetSpeed(_cp0.cp_fSpeed);

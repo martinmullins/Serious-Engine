@@ -257,7 +257,7 @@ void CConsole::CloseLog(void)
 // Print formated text to the main console.
 void CPrintF(const char *strFormat, ...)
 {
-  #ifdef EMSCRIPTEN
+  #if defined(EMSCRIPTEN) || defined(STATICALLY_LINKED)
     va_list args;
     va_start(args, strFormat);
     vprintf(strFormat, args);

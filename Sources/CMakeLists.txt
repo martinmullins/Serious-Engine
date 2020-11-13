@@ -8,6 +8,7 @@ project(SeriousEngine)
 option(USE_SYSTEM_SDL2 "Use systems sdl2 development files" On)
 option(USE_SYSTEM_ZLIB "Use systems zlib development files" On)
 option(USE_CCACHE "Set to ON to use ccache if present in the system" ${USE_CCACHE})
+option(STATICALLY_LINKED "Set to build ssam statically" Off)
 
 
 # fallback for cmake versions without add_compile_options # RAKE! Borrowed from dhewm3 project
@@ -50,6 +51,15 @@ if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
   set(EM_LIB_COMPILE_FLAGS "-s EXPORT_ALL=1 -s SIDE_MODULE=1 -s ALLOW_MEMORY_GROWTH=1")
   set(EM_LIB_LINK_FLAGS "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s EXPORT_ALL=1 -s SIDE_MODULE=1 -s ALLOW_MEMORY_GROWTH=1 -shared")
+endif()
+
+if(STATICALLY_LINKED)
+  message("Building ssam for static runtime")
+  add_definitions(-DSTATICALLY_LINKED)
+  set (LIB_TYPE STATIC)
+else()
+  message("Building ssam for dynamic runtime")
+  set (LIB_TYPE SHARED)
 endif()
 
 # Use systemwide SDL2 or custom build
@@ -661,7 +671,7 @@ add_custom_target(ParseEntities DEPENDS ${ENTITIES_H})
 
 set(ENTITIESMPLIB "Entities${MP}${DEBUGSUFFIX}")
 if(TFE)
- add_library(${ENTITIESMPLIB} SHARED
+ add_library(${ENTITIESMPLIB} ${LIB_TYPE}
      ${ENTITIES_CPP}
      Entities/Common/Common.cpp
      Entities/Common/Debris.cpp
@@ -671,7 +681,7 @@ if(TFE)
      Entities/Common/HUD.cpp
  )
 else()
- add_library(${ENTITIESMPLIB} SHARED
+ add_library(${ENTITIESMPLIB} ${LIB_TYPE}
      ${ENTITIES_CPP}
      EntitiesMP/Common/Common.cpp
  	 EntitiesMP/Common/Particles.cpp
@@ -693,7 +703,7 @@ endif()
 add_dependencies(${ENTITIESMPLIB} ParseEntities)
 
 set(GAMEMPLIB "Game${MP}${DEBUGSUFFIX}")
-add_library(${GAMEMPLIB} SHARED
+add_library(${GAMEMPLIB} ${LIB_TYPE}
     GameMP/Camera.cpp
     GameMP/CompMessage.cpp
     GameMP/CompModels.cpp
@@ -718,7 +728,7 @@ endif()
 add_dependencies(${GAMEMPLIB} ParseEntities)
 
 set(SHADERSLIB "Shaders${DEBUGSUFFIX}")
-add_library(${SHADERSLIB} SHARED
+add_library(${SHADERSLIB} ${LIB_TYPE}
     Shaders/AddShader.cpp
     Shaders/AddShaderDS.cpp
     Shaders/BaseShader.cpp
@@ -1001,6 +1011,10 @@ set(ENGINE_SRCS
     ${ZLIB_SRCS}
 )
 
+add_subdirectory(amp11lib)
+add_subdirectory(libogg)
+add_subdirectory(libvorbis)
+
 add_executable(ssam
     ${ENGINE_SRCS}
     SeriousSam/LevelInfo.cpp
@@ -1095,6 +1109,10 @@ if(FREEBSD)
         target_link_libraries(SeriousSamDedicated ${SDL2_LIBRARY})
         target_link_libraries(SeriousSamDedicated ${ZLIB_LIBRARIES})
     endif()
+endif()
+
+if(STATICALLY_LINKED)
+  target_link_libraries(ssam -Wl,--whole-archive ${ENTITIESMPLIB} ${GAMEMPLIB} ${ShadersLIB} vorbis amp11lib -Wl,--no-whole-archive)
 endif()
 
 if(TFE)
