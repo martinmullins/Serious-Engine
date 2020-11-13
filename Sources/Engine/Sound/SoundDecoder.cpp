@@ -211,6 +211,8 @@ void CSoundDecoder::InitPlugins(void)
     if (_hOV==NULL) {
        #if ((defined PLATFORM_WIN32) && (defined NDEBUG))
          #define VORBISLIB "vorbisfile_d"
+       #elif (defined STATICALLY_LINKED)
+         #define VORBISLIB ((const char*)0)
        #else
          #ifdef USE_TREMOR
           #define VORBISLIB "vorbisidec"
@@ -220,7 +222,7 @@ void CSoundDecoder::InitPlugins(void)
        #endif
        _hOV = CDynamicLoader::GetInstance(VORBISLIB);
        if( _hOV->GetError() != NULL) {
-         ThrowF_t(TRANS("Cannot load " VORBISLIB " shared library: %s."), _hOV->GetError());
+         ThrowF_t(TRANS("Cannot load vorbislib shared library: %s."), _hOV->GetError());
        }
     }
 
@@ -229,7 +231,7 @@ void CSoundDecoder::InitPlugins(void)
 
     // if all successful, enable mpx playing
     _bOVEnabled = TRUE;
-    CPrintF(TRANSV("  " VORBISLIB " shared library loaded, ogg playing enabled\n"));
+    CPrintF(TRANSV("  vorbislib shared library loaded, ogg playing enabled\n"));
   } catch (char *strError) {  // !!! FIXME: should be const char* ?
     CPrintF(TRANSV("OGG playing disabled: %s\n"), strError);
   }
@@ -237,7 +239,12 @@ void CSoundDecoder::InitPlugins(void)
   try {
     // load amp11lib
     if (_hAmp11lib==NULL) {
-      _hAmp11lib = CDynamicLoader::GetInstance("amp11lib");
+      #ifdef STATICALLY_LINKED
+        #define AMP11LIB NULL
+      #else
+        #define AMP11LIB "amp11lib"
+      #endif
+      _hAmp11lib = CDynamicLoader::GetInstance(AMP11LIB);
       if( _hAmp11lib->GetError() != NULL) {
         ThrowF_t(TRANS("Cannot load amp11lib shared library: %s"), _hAmp11lib->GetError());
       }
