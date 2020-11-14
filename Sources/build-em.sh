@@ -10,9 +10,13 @@ SRC_ROOT="$GIT_ROOT/Sources"
 set -e
 set -x
 
-cm() {
+clean() {
   rm -rf cmake-em-build
   mkdir cmake-em-build
+}
+
+cm() {
+  mkdir -p cmake-em-build
   pushd cmake-em-build
 
   emcmake cmake \
@@ -21,6 +25,8 @@ cm() {
     -DCMAKE_C_FLAGS=-m32 \
     -DCMAKE_CXX_FLAGS=-m32 \
     -DUSE_I386_NASM_ASM=FALSE \
+    -DUSE_ASM=FALSE \
+    -DSTATICALLY_LINKED=ON \
     "$SRC_ROOT"
 
 
@@ -49,7 +55,7 @@ cpfiles() {
 }
 
 serveit() {
-  serve "$GIT_ROOT"/cmake-em-build/
+  npx serve "$GIT_ROOT"/cmake-em-build/
 }
 
 $*
