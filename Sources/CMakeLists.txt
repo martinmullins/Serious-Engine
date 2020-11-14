@@ -1082,8 +1082,8 @@ if(MACOSX)
 endif()
 
 if (EMSCRIPTEN)
-    set_target_properties(ssam PROPERTIES LINK_FLAGS "$ENV{PRELOAD} -s EXPORT_ALL=1 -s MAIN_MODULE=1 -s ALLOW_MEMORY_GROWTH=1 -ldl -rdynamic")
-    set_target_properties(ssam PROPERTIES COMPILE_FLAGS "-s MAIN_MODULE=1 $ENV{PRELOAD}")
+    set_target_properties(ssam PROPERTIES LINK_FLAGS "--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/pre.js --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../preload@/ -s EXPORT_ALL=1 -s MAIN_MODULE=1 -s ALLOW_MEMORY_GROWTH=1 -ldl -rdynamic")
+    set_target_properties(ssam PROPERTIES COMPILE_FLAGS "-s MAIN_MODULE=1")
 endif()
 
 if(LINUX)
