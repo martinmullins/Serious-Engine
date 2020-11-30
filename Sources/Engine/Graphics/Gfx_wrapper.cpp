@@ -21,6 +21,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <Engine/Graphics/GfxProfile.h>
 #include <Engine/Base/Statistics_Internal.h>
 
+#include <Engine/Base/Console.h>
+
 //#include <d3dx8math.h>
 //#pragma comment(lib, "d3dx8.lib")
 
@@ -88,6 +90,11 @@ INDEX truform_iLevel  = -1;
 BOOL  truform_bLinear = FALSE;
 
 
+#ifdef EMSCRIPTEN
+#include "Engine/Graphics/Gfx_wrapper_OpenGL.h"
+#include <assert.h>
+#endif
+
 // functions' pointers
 void (*gfxEnableDepthWrite)(void) = NULL;
 void (*gfxEnableDepthBias)(void) = NULL;
@@ -147,12 +154,49 @@ static void none_void(void)
 
 // error checkers (this is for debug version only)
 
+#ifdef EMSCRIPTEN
+const char* glErrString(GLenum n) {
+  switch(n) {
+    case  GL_INVALID_ENUM:
+      return "GL_INVALID_ENUM";
+    case  GL_INVALID_VALUE:
+      return "GL_INVALID_VALUE";
+    case  GL_INVALID_OPERATION:
+      return "GL_INVALID_OPERATION";
+    case  GL_STACK_OVERFLOW:
+      return "GL_STACK_OVERFLOW";
+    case  GL_STACK_UNDERFLOW:
+      return "GL_STACK_UNDERFLOW";
+    case  GL_INVALID_FRAMEBUFFER_OPERATION:
+      return "GL_INVALID_FRAMEBUFFER_OPERATION";
+    case  GL_OUT_OF_MEMORY:
+      return "GL_OUT_OF_MEMORY";
+    default:
+      return "UNKNOWN";
+  }
+  return "IMPOSSIBLE";
+}
+void OGL_CheckError(const char* fn, const char* f, int lineno)
+#else
 void OGL_CheckError(void)
+#endif
 {
-#ifndef NDEBUG
+#if !defined(NDEBUG)
   const GfxAPIType eAPI = _pGfx->gl_eCurrentAPI;
   if( eAPI==GAT_OGL) ASSERT( pglGetError()==GL_NO_ERROR);
   else ASSERT( eAPI==GAT_NONE);
+#elif defined(EMSCRIPTEN)
+  GLenum rc;
+  int failed = 0;
+  while((rc = pglGetError()) != GL_NO_ERROR) {
+    const char* errStr = glErrString(rc);
+    CPrintF("GL Error '%s': %s():%s:%d errno=%d\n", errStr, fn, f, lineno, rc);
+    fflush(stdout);
+    failed = 1;
+  }
+  if (failed) {
+    //abort();
+  }
 #endif
 }
 
@@ -665,7 +709,10 @@ extern ULONG gfxGetColorMask(void)
 
 
 #include "Gfx_wrapper_OpenGL.cpp"
+
+#ifndef EMSCRIPTEN
 #include "Gfx_wrapper_Direct3D.cpp"
+#endif
 
 
 
@@ -847,4 +894,53 @@ void GFX_SetFunctionPointers( INDEX iAPI)
     gfxLockArrays           = &none_void;
     gfxSetColorMask         = &none_SetColorMask;
   }
+
+  #ifdef EMSCRIPTEN
+  assert(gfxEnableDepthWrite != NULL);
+  assert(gfxEnableDepthBias != NULL);
+  assert(gfxEnableDepthTest != NULL);
+  assert(gfxEnableAlphaTest != NULL);
+  assert(gfxEnableBlend != NULL);
+  assert(gfxEnableDither != NULL);
+  assert(gfxEnableTexture != NULL);
+  assert(gfxEnableClipping != NULL);
+  assert(gfxEnableClipPlane != NULL);
+  assert(gfxEnableTruform != NULL);
+  assert(gfxDisableDepthWrite != NULL);
+  assert(gfxDisableDepthBias != NULL);
+  assert(gfxDisableDepthTest != NULL);
+  assert(gfxDisableAlphaTest != NULL);
+  assert(gfxDisableBlend != NULL);
+  assert(gfxDisableDither != NULL);
+  assert(gfxDisableTexture != NULL);
+  assert(gfxDisableClipping != NULL);
+  assert(gfxDisableClipPlane != NULL);
+  assert(gfxDisableTruform != NULL);
+  assert(gfxBlendFunc != NULL);
+  assert(gfxDepthFunc != NULL);
+  assert(gfxDepthRange != NULL);
+  assert(gfxCullFace != NULL);
+  assert(gfxFrontFace != NULL);
+  assert(gfxClipPlane != NULL);
+  assert(gfxSetOrtho != NULL);
+  assert(gfxSetFrustum != NULL);
+  assert(gfxSetTextureMatrix != NULL);
+  assert(gfxSetViewMatrix != NULL);
+  assert(gfxPolygonMode != NULL);
+  assert(gfxSetTextureWrapping != NULL);
+  assert(gfxSetTextureModulation != NULL);
+  assert(gfxGenerateTexture != NULL);
+  assert(gfxDeleteTexture != NULL);
+  assert(gfxSetVertexArray != NULL);
+  assert(gfxSetNormalArray != NULL);
+  assert(gfxSetTexCoordArray != NULL);
+  assert(gfxSetColorArray != NULL);
+  assert(gfxDrawElements != NULL);
+  assert(gfxSetConstantColor != NULL);
+  assert(gfxEnableColorArray != NULL);
+  assert(gfxDisableColorArray != NULL);
+  assert(gfxFinish != NULL);
+  assert(gfxLockArrays != NULL);
+  assert(gfxSetColorMask != NULL);
+  #endif
 }

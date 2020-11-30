@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
  *
  */
 
+#ifndef EMSCRIPTEN
 typedef enum {
 	/* Boolean values */
 	GL_FALSE = 0,
@@ -1062,6 +1063,340 @@ typedef double		GLdouble;	/* double precision float */
 typedef double		GLclampd;	/* double precision float in [0,1] */
 
 
+#else
+  /* WGL extensions */
+#ifndef WGL_NUMBER_PIXEL_FORMATS_EXT 
+#define WGL_NUMBER_PIXEL_FORMATS_EXT  0x2000
+#endif
+#ifndef WGL_DRAW_TO_WINDOW_EXT       
+#define WGL_DRAW_TO_WINDOW_EXT        0x2001
+#endif
+#ifndef WGL_DRAW_TO_BITMAP_EXT       
+#define WGL_DRAW_TO_BITMAP_EXT        0x2002
+#endif
+#ifndef WGL_ACCELERATION_EXT         
+#define WGL_ACCELERATION_EXT          0x2003
+#endif
+#ifndef WGL_NEED_PALETTE_EXT         
+#define WGL_NEED_PALETTE_EXT          0x2004
+#endif
+#ifndef WGL_NEED_SYSTEM_PALETTE_EXT  
+#define WGL_NEED_SYSTEM_PALETTE_EXT   0x2005
+#endif
+#ifndef WGL_SWAP_LAYER_BUFFERS_EXT   
+#define WGL_SWAP_LAYER_BUFFERS_EXT    0x2006
+#endif
+#ifndef WGL_SWAP_METHOD_EXT          
+#define WGL_SWAP_METHOD_EXT           0x2007
+#endif
+#ifndef WGL_NUMBER_OVERLAYS_EXT      
+#define WGL_NUMBER_OVERLAYS_EXT       0x2008
+#endif
+#ifndef WGL_NUMBER_UNDERLAYS_EXT     
+#define WGL_NUMBER_UNDERLAYS_EXT      0x2009
+#endif
+#ifndef WGL_TRANSPARENT_EXT          
+#define WGL_TRANSPARENT_EXT           0x200A
+#endif
+#ifndef WGL_TRANSPARENT_VALUE_EXT    
+#define WGL_TRANSPARENT_VALUE_EXT     0x200B
+#endif
+#ifndef WGL_SHARE_DEPTH_EXT          
+#define WGL_SHARE_DEPTH_EXT           0x200C
+#endif
+#ifndef WGL_SHARE_STENCIL_EXT        
+#define WGL_SHARE_STENCIL_EXT         0x200D
+#endif
+#ifndef WGL_SHARE_ACCUM_EXT          
+#define WGL_SHARE_ACCUM_EXT           0x200E
+#endif
+#ifndef WGL_SUPPORT_GDI_EXT          
+#define WGL_SUPPORT_GDI_EXT           0x200F
+#endif
+#ifndef WGL_SUPPORT_OPENGL_EXT       
+#define WGL_SUPPORT_OPENGL_EXT        0x2010
+#endif
+#ifndef WGL_DOUBLE_BUFFER_EXT        
+#define WGL_DOUBLE_BUFFER_EXT         0x2011
+#endif
+#ifndef WGL_STEREO_EXT               
+#define WGL_STEREO_EXT                0x2012
+#endif
+#ifndef WGL_PIXEL_TYPE_EXT           
+#define WGL_PIXEL_TYPE_EXT            0x2013
+#endif
+#ifndef WGL_COLOR_BITS_EXT           
+#define WGL_COLOR_BITS_EXT            0x2014
+#endif
+#ifndef WGL_RED_BITS_EXT             
+#define WGL_RED_BITS_EXT              0x2015
+#endif
+#ifndef WGL_RED_SHIFT_EXT            
+#define WGL_RED_SHIFT_EXT             0x2016
+#endif
+#ifndef WGL_GREEN_BITS_EXT           
+#define WGL_GREEN_BITS_EXT            0x2017
+#endif
+#ifndef WGL_GREEN_SHIFT_EXT          
+#define WGL_GREEN_SHIFT_EXT           0x2018
+#endif
+#ifndef WGL_BLUE_BITS_EXT            
+#define WGL_BLUE_BITS_EXT             0x2019
+#endif
+#ifndef WGL_BLUE_SHIFT_EXT           
+#define WGL_BLUE_SHIFT_EXT            0x201A
+#endif
+#ifndef WGL_ALPHA_BITS_EXT           
+#define WGL_ALPHA_BITS_EXT            0x201B
+#endif
+#ifndef WGL_ALPHA_SHIFT_EXT          
+#define WGL_ALPHA_SHIFT_EXT           0x201C
+#endif
+#ifndef WGL_ACCUM_BITS_EXT           
+#define WGL_ACCUM_BITS_EXT            0x201D
+#endif
+#ifndef WGL_ACCUM_RED_BITS_EXT       
+#define WGL_ACCUM_RED_BITS_EXT        0x201E
+#endif
+#ifndef WGL_ACCUM_GREEN_BITS_EXT     
+#define WGL_ACCUM_GREEN_BITS_EXT      0x201F
+#endif
+#ifndef WGL_ACCUM_BLUE_BITS_EXT      
+#define WGL_ACCUM_BLUE_BITS_EXT       0x2020
+#endif
+#ifndef WGL_ACCUM_ALPHA_BITS_EXT     
+#define WGL_ACCUM_ALPHA_BITS_EXT      0x2021
+#endif
+#ifndef WGL_DEPTH_BITS_EXT           
+#define WGL_DEPTH_BITS_EXT            0x2022
+#endif
+#ifndef WGL_STENCIL_BITS_EXT         
+#define WGL_STENCIL_BITS_EXT          0x2023
+#endif
+#ifndef WGL_AUX_BUFFERS_EXT          
+#define WGL_AUX_BUFFERS_EXT           0x2024
+#endif
+
+#ifndef WGL_NO_ACCELERATION_EXT      
+#define WGL_NO_ACCELERATION_EXT       0x2025
+#endif
+#ifndef WGL_GENERIC_ACCELERATION_EXT 
+#define WGL_GENERIC_ACCELERATION_EXT  0x2026
+#endif
+#ifndef WGL_FULL_ACCELERATION_EXT    
+#define WGL_FULL_ACCELERATION_EXT     0x2027
+#endif
+#ifndef WGL_SWAP_EXCHANGE_EXT        
+#define WGL_SWAP_EXCHANGE_EXT         0x2028
+#endif
+#ifndef WGL_SWAP_COPY_EXT            
+#define WGL_SWAP_COPY_EXT             0x2029
+#endif
+#ifndef WGL_SWAP_UNDEFINED_EXT       
+#define WGL_SWAP_UNDEFINED_EXT        0x202A
+#endif
+#ifndef WGL_TYPE_RGBA_EXT            
+#define WGL_TYPE_RGBA_EXT             0x202B
+#endif
+#ifndef WGL_TYPE_COLORINDEX_EXT      
+#define WGL_TYPE_COLORINDEX_EXT       0x202C
+#endif
+                                       
+#ifndef WGL_NUMBER_PIXEL_FORMATS_ARB		
+#define WGL_NUMBER_PIXEL_FORMATS_ARB		 0x2000
+#endif
+#ifndef WGL_DRAW_TO_WINDOW_ARB			    
+#define WGL_DRAW_TO_WINDOW_ARB			     0x2001
+#endif
+#ifndef WGL_DRAW_TO_BITMAP_ARB			    
+#define WGL_DRAW_TO_BITMAP_ARB			     0x2002
+#endif
+#ifndef WGL_ACCELERATION_ARB				    
+#define WGL_ACCELERATION_ARB				     0x2003
+#endif
+#ifndef WGL_NEED_PALETTE_ARB				    
+#define WGL_NEED_PALETTE_ARB				     0x2004
+#endif
+#ifndef WGL_NEED_SYSTEM_PALETTE_ARB	  	
+#define WGL_NEED_SYSTEM_PALETTE_ARB	  	 0x2005
+#endif
+#ifndef WGL_SWAP_LAYER_BUFFERS_ARB		  
+#define WGL_SWAP_LAYER_BUFFERS_ARB		   0x2006
+#endif
+#ifndef WGL_SWAP_METHOD_ARB				      
+#define WGL_SWAP_METHOD_ARB				       0x2007
+#endif
+#ifndef WGL_NUMBER_OVERLAYS_ARB				  
+#define WGL_NUMBER_OVERLAYS_ARB				   0x2008
+#endif
+#ifndef WGL_NUMBER_UNDERLAYS_ARB        
+#define WGL_NUMBER_UNDERLAYS_ARB         0x2009
+#endif
+#ifndef WGL_TRANSPARENT_ARB	    	      
+#define WGL_TRANSPARENT_ARB	    	       0x200A
+#endif
+#ifndef WGL_TRANSPARENT_RED_VALUE_ARB   
+#define WGL_TRANSPARENT_RED_VALUE_ARB    0x2037
+#endif
+#ifndef WGL_TRANSPARENT_GREEN_VALUE_ARB	
+#define WGL_TRANSPARENT_GREEN_VALUE_ARB	 0x2038
+#endif
+#ifndef WGL_TRANSPARENT_BLUE_VALUE_ARB	
+#define WGL_TRANSPARENT_BLUE_VALUE_ARB	 0x2039
+#endif
+#ifndef WGL_TRANSPARENT_ALPHA_VALUE_ARB	
+#define WGL_TRANSPARENT_ALPHA_VALUE_ARB	 0x203A
+#endif
+#ifndef WGL_TRANSPARENT_INDEX_VALUE_ARB	
+#define WGL_TRANSPARENT_INDEX_VALUE_ARB	 0x203B
+#endif
+#ifndef WGL_SHARE_DEPTH_ARB				      
+#define WGL_SHARE_DEPTH_ARB				       0x200C
+#endif
+#ifndef WGL_SHARE_STENCIL_ARB				    
+#define WGL_SHARE_STENCIL_ARB				     0x200D
+#endif
+#ifndef WGL_SHARE_ACCUM_ARB				      
+#define WGL_SHARE_ACCUM_ARB				       0x200E
+#endif
+#ifndef WGL_SUPPORT_GDI_ARB				      
+#define WGL_SUPPORT_GDI_ARB				       0x200F
+#endif
+#ifndef WGL_SUPPORT_OPENGL_ARB				  
+#define WGL_SUPPORT_OPENGL_ARB				   0x2010
+#endif
+#ifndef WGL_DOUBLE_BUFFER_ARB			      
+#define WGL_DOUBLE_BUFFER_ARB			       0x2011
+#endif
+#ifndef WGL_STEREO_ARB				          
+#define WGL_STEREO_ARB				           0x2012
+#endif
+#ifndef WGL_PIXEL_TYPE_ARB			        
+#define WGL_PIXEL_TYPE_ARB			         0x2013
+#endif
+#ifndef WGL_COLOR_BITS_ARB			        
+#define WGL_COLOR_BITS_ARB			         0x2014
+#endif
+#ifndef WGL_RED_BITS_ARB				    	  
+#define WGL_RED_BITS_ARB				    	   0x2015
+#endif
+#ifndef WGL_RED_SHIFT_ARB	    	    	  
+#define WGL_RED_SHIFT_ARB	    	    	   0x2016
+#endif
+#ifndef WGL_GREEN_BITS_ARB				      
+#define WGL_GREEN_BITS_ARB				       0x2017
+#endif
+#ifndef WGL_GREEN_SHIFT_ARB				      
+#define WGL_GREEN_SHIFT_ARB				       0x2018
+#endif
+#ifndef WGL_BLUE_BITS_ARB				        
+#define WGL_BLUE_BITS_ARB				         0x2019
+#endif
+#ifndef WGL_BLUE_SHIFT_ARB				      
+#define WGL_BLUE_SHIFT_ARB				       0x201A
+#endif
+#ifndef WGL_ALPHA_BITS_ARB				      
+#define WGL_ALPHA_BITS_ARB				       0x201B
+#endif
+#ifndef WGL_ALPHA_SHIFT_ARB				      
+#define WGL_ALPHA_SHIFT_ARB				       0x201C
+#endif
+#ifndef WGL_ACCUM_BITS_ARB				      
+#define WGL_ACCUM_BITS_ARB				       0x201D
+#endif
+#ifndef WGL_ACCUM_RED_BITS_ARB				  
+#define WGL_ACCUM_RED_BITS_ARB				   0x201E
+#endif
+#ifndef WGL_ACCUM_GREEN_BITS_ARB			  
+#define WGL_ACCUM_GREEN_BITS_ARB			   0x201F
+#endif
+#ifndef WGL_ACCUM_BLUE_BITS_ARB				  
+#define WGL_ACCUM_BLUE_BITS_ARB				   0x2020
+#endif
+#ifndef WGL_ACCUM_ALPHA_BITS_ARB			  
+#define WGL_ACCUM_ALPHA_BITS_ARB			   0x2021
+#endif
+#ifndef WGL_DEPTH_BITS_ARB				      
+#define WGL_DEPTH_BITS_ARB				       0x2022
+#endif
+#ifndef WGL_STENCIL_BITS_ARB				    
+#define WGL_STENCIL_BITS_ARB				     0x2023
+#endif
+#ifndef WGL_AUX_BUFFERS_ARB				      
+#define WGL_AUX_BUFFERS_ARB				       0x2024
+#endif
+
+#ifndef WGL_NO_ACCELERATION_ARB      
+#define WGL_NO_ACCELERATION_ARB       0x2025
+#endif
+#ifndef WGL_GENERIC_ACCELERATION_ARB 
+#define WGL_GENERIC_ACCELERATION_ARB  0x2026
+#endif
+#ifndef WGL_FULL_ACCELERATION_ARB    
+#define WGL_FULL_ACCELERATION_ARB     0x2027
+#endif
+#ifndef WGL_SWAP_EXCHANGE_ARB        
+#define WGL_SWAP_EXCHANGE_ARB         0x2028
+#endif
+#ifndef WGL_SWAP_COPY_ARB            
+#define WGL_SWAP_COPY_ARB             0x2029
+#endif
+#ifndef WGL_SWAP_UNDEFINED_ARB       
+#define WGL_SWAP_UNDEFINED_ARB        0x202A
+#endif
+#ifndef WGL_TYPE_RGBA_ARB            
+#define WGL_TYPE_RGBA_ARB             0x202B
+#endif
+#ifndef WGL_TYPE_COLORINDEX_ARB      
+#define WGL_TYPE_COLORINDEX_ARB       0x202C
+#endif
+
+#ifndef WGL_SAMPLE_BUFFERS_3DFX	
+#define WGL_SAMPLE_BUFFERS_3DFX	 0x2060
+#endif
+#ifndef WGL_SAMPLES_3DFX			  
+#define WGL_SAMPLES_3DFX			   0x2061
+#endif
+ 
+
+// not included as they normally are from gl_types.h
+#ifndef GL_RGB_S3TC                                
+#define GL_RGB_S3TC                                0x83A0
+#endif
+#ifndef GL_RGB4_S3TC                               
+#define GL_RGB4_S3TC                               0x83A1
+#endif
+#ifndef GL_RGBA_S3TC                               
+#define GL_RGBA_S3TC                               0x83A2
+#endif
+#ifndef GL_COMPRESSED_RGB_S3TC                     
+#define GL_COMPRESSED_RGB_S3TC                     GL_RGB_S3TC
+#endif
+#ifndef GL_COMPRESSED_RGB4_S3TC                    
+#define GL_COMPRESSED_RGB4_S3TC                    GL_RGB4_S3TC
+#endif
+#ifndef GL_COMPRESSED_RGBA_S3TC                    
+#define GL_COMPRESSED_RGBA_S3TC                    GL_RGBA_S3TC
+#endif
+#ifndef GL_COMPRESSED_LUMINANCE_S3TC               
+#define GL_COMPRESSED_LUMINANCE_S3TC               0x83A3
+#endif
+#ifndef GL_COMPRESSED_LUMINANCE_ALPHA_S3TC         
+#define GL_COMPRESSED_LUMINANCE_ALPHA_S3TC         0x83A4
+#endif
+#ifndef GL_COMPRESSED_RGB4_COMPRESSED_ALPHA4_S3TC  
+#define GL_COMPRESSED_RGB4_COMPRESSED_ALPHA4_S3TC  0x83A5
+#endif
+#ifndef GL_COMPRESSED_RGB4_ALPHA4_S3TC             
+#define GL_COMPRESSED_RGB4_ALPHA4_S3TC             0x83A6
+#endif
+#ifndef GL_COMPRESSED_LUMINANCE4_S3TC              
+#define GL_COMPRESSED_LUMINANCE4_S3TC              0x83A7
+#endif
+#ifndef GL_COMPRESSED_LUMINANCE4_ALPHA_S3TC        
+#define GL_COMPRESSED_LUMINANCE4_ALPHA_S3TC        0x83A8
+#endif
+#endif
 
 
 #endif  /* include-once check. */

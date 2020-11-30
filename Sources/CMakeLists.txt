@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.18)
 project(SeriousEngine)
 
 # Set @rpath for Mac OS X shared library install names.
@@ -8,7 +8,7 @@ project(SeriousEngine)
 option(USE_SYSTEM_SDL2 "Use systems sdl2 development files" On)
 option(USE_SYSTEM_ZLIB "Use systems zlib development files" On)
 option(USE_CCACHE "Set to ON to use ccache if present in the system" ${USE_CCACHE})
-option(STATICALLY_LINKED "Set to build ssam statically" Off)
+option(STATICALLY_LINKED "Set to build ssam statically" OFF)
 
 
 # fallback for cmake versions without add_compile_options # RAKE! Borrowed from dhewm3 project
@@ -36,7 +36,7 @@ if(USE_CCACHE)
 endif()
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  set(USE_FLAGS "-s USE_SDL=2 -s USE_ZLIB=1 -s USE_OGG=1 -s USE_VORBIS=1 -s DISABLE_EXCEPTION_CATCHING=0")
+  set(USE_FLAGS "-s FULL_ES2=1 -s USE_SDL=2 -s USE_ZLIB=1 -s USE_OGG=1 -s USE_VORBIS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s SAFE_HEAP=0 -s STACK_OVERFLOW_CHECK=1 -s ASSERTIONS=1")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS}")
@@ -65,6 +65,7 @@ else()
   message("Building ssam for dynamic runtime")
   set (LIB_TYPE SHARED)
 endif()
+
 
 # Use systemwide SDL2 or custom build
 # RAKE!: Find a way to use their custom built library if
@@ -167,9 +168,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -marm -faligned-new -ffast-math")
             set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -marm -ffast-math")
         elseif(EMSCRIPTEN)
-            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -s ASSERTIONS=1")
-            set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g")
-            set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1")
+            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
+            set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
+            set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
         else()
             set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
             set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
@@ -187,9 +188,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -marm -faligned-new -ffast-math")
             set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -marm -ffast-math")
         elseif (EMSCRIPTEN)
-            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -s ASSERTIONS=1")
-            set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -s ASSERTIONS=1") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
-            set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os")
+            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
+            set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
+            set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -g4")
         else()
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -fno-unsafe-math-optimizations")
             set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
@@ -783,6 +784,12 @@ if (USE_I386_NASM_ASM)
     list(APPEND ADDITIONAL_ENGINE_SRCS SoundMixer386.o)
 endif()
 
+if (STATICALLY_LINKED)
+ set(DYN_LOADER_SRC Engine/Base/Unix/RegistryLoader.cpp)
+else()
+ set(DYN_LOADER_SRC Engine/Base/Unix/UnixDynamicLoader.cpp)
+endif()
+
 if(USE_SINGLE_THREAD)
  set(SYNCHRO_SRCS
     Engine/Base/NullSynchronization.cpp  # single threaded.
@@ -887,7 +894,7 @@ set(ENGINE_SRCS
     Engine/Base/Parser.h
     Engine/Base/IFeel.cpp
     Engine/Base/Unix/UnixFileSystem.cpp
-    Engine/Base/Unix/UnixDynamicLoader.cpp
+    ${DYN_LOADER_SRC}
     Engine/Base/SDL/SDLTimer.cpp
     Engine/Base/SDL/SDLInput.cpp
     Engine/Base/SDL/SDLEvents.cpp
@@ -1027,6 +1034,10 @@ if (NOT EMSCRIPTEN)
   add_subdirectory(libvorbis)
 endif()
 
+if (EMSCRIPTEN)
+  add_subdirectory(gl4es)
+endif()
+
 add_executable(ssam
     ${ENGINE_SRCS}
     SeriousSam/LevelInfo.cpp
@@ -1041,12 +1052,16 @@ add_executable(ssam
     SeriousSam/Menu.cpp
     SeriousSam/MenuGadgets.cpp
     SeriousSam/MenuPrinting.cpp
+    Registry.cpp
 )
 target_link_libraries(ssam engine_safemath)
 add_dependencies(ssam ParseEntities)
 # Make symbols in the main executable available to dynamic objects
 set_target_properties(ssam PROPERTIES ENABLE_EXPORTS ON)
 
+if(EMSCRIPTEN)
+  target_include_directories(ssam PUBLIC gl4es/include)
+endif()
 
 # !!! FIXME: this is an option because you have to recompile the entire engine twice.
 # !!! FIXME:  If we can put the engine in a static library and not lose symbols,
@@ -1082,8 +1097,137 @@ if(MACOSX)
 endif()
 
 if (EMSCRIPTEN)
-    set_target_properties(ssam PROPERTIES LINK_FLAGS "--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/pre.js --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../preload@/ -s EXPORT_ALL=1 -s MAIN_MODULE=1 -s ALLOW_MEMORY_GROWTH=1 -ldl -rdynamic")
-    set_target_properties(ssam PROPERTIES COMPILE_FLAGS "-s MAIN_MODULE=1")
+    set_target_properties(ssam PROPERTIES LINK_FLAGS "\
+      --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/pre.js \
+      --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../preload@/ \
+      -s ALLOW_MEMORY_GROWTH=1 \
+      -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+      -s LLD_REPORT_UNDEFINED=1 \
+      -s USE_WEBGL2=1 \
+      -s \"EXPORTED_FUNCTIONS=[\
+        '_main',\
+        '_GAME_Create',\
+         '_CAcid_DLLClass',\
+         '_CAirWave_DLLClass',\
+         '_CAmmoItem_DLLClass',\
+         '_CAmmoPack_DLLClass',\
+         '_CAnimationChanger_DLLClass',\
+         '_CAnimationHub_DLLClass',\
+         '_CArmorItem_DLLClass',\
+         '_CBackgroundViewer_DLLClass',\
+         '_CBeast_DLLClass',\
+         '_CBigHead_DLLClass',\
+         '_CBlendController_DLLClass',\
+         '_CBloodSpray_DLLClass',\
+         '_CBoneman_DLLClass',\
+         '_CBouncer_DLLClass',\
+         '_CBullet_DLLClass',\
+         '_CCamera_DLLClass',\
+         '_CCameraMarker_DLLClass',\
+         '_CCannonBall_DLLClass',\
+         '_CCatman_DLLClass',\
+         '_CCopier_DLLClass',\
+         '_CCounter_DLLClass',\
+         '_CCrateRider_DLLClass',\
+         '_CCyborgBike_DLLClass',\
+         '_CCyborg_DLLClass',\
+         '_CDamager_DLLClass',\
+         '_CDebris_DLLClass',\
+         '_CDestroyableArchitecture_DLLClass',\
+         '_CDevil_DLLClass',\
+         '_CDevilMarker_DLLClass',\
+         '_CDevilProjectile_DLLClass',\
+         '_CDoorController_DLLClass',\
+         '_CDragonman_DLLClass',\
+         '_CEffectMarker_DLLClass',\
+         '_CEffector_DLLClass',\
+         '_CElemental_DLLClass',\
+         '_CEnemyBase_DLLClass',\
+         '_CEnemyCounter_DLLClass',\
+         '_CEnemyDive_DLLClass',\
+         '_CEnemyFly_DLLClass',\
+         '_CEnemyMarker_DLLClass',\
+         '_CEnemyRunInto_DLLClass',\
+         '_CEnemySpawner_DLLClass',\
+         '_CEnvironmentBase_DLLClass',\
+         '_CEnvironmentMarker_DLLClass',\
+         '_CEruptor_DLLClass',\
+         '_CEyeman_DLLClass',\
+         '_CFish_DLLClass',\
+         '_CFishman_DLLClass',\
+         '_CFlame_DLLClass',\
+         '_CFogMarker_DLLClass',\
+         '_CGizmo_DLLClass',\
+         '_CGlobal_DLLClass',\
+         '_CGradientMarker_DLLClass',\
+         '_CGravityMarker_DLLClass',\
+         '_CGravityRouter_DLLClass',\
+         '_CHazeMarker_DLLClass',\
+         '_CHeadman_DLLClass',\
+         '_CHealthItem_DLLClass',\
+         '_CHuanman_DLLClass',\
+         '_CItem_DLLClass',\
+         '_CKeyItem_DLLClass',\
+         '_CLight_DLLClass',\
+         '_CLightning_DLLClass',\
+         '_CLightStyle_DLLClass',\
+         '_CMamut_DLLClass',\
+         '_CMamutman_DLLClass',\
+         '_CMantaman_DLLClass',\
+         '_CMarker_DLLClass',\
+         '_CMessageHolder_DLLClass',\
+         '_CMessageItem_DLLClass',\
+         '_CMirrorMarker_DLLClass',\
+         '_CModelDestruction_DLLClass',\
+         '_CModelHolder2_DLLClass',\
+         '_CModelHolder_DLLClass',\
+         '_CMovingBrush_DLLClass',\
+         '_CMovingBrushMarker_DLLClass',\
+         '_CMusicChanger_DLLClass',\
+         '_CMusicHolder_DLLClass',\
+         '_CNavigationMarker_DLLClass',\
+         '_CParticlesHolder_DLLClass',\
+         '_CPendulum_DLLClass',\
+         '_CPipebomb_DLLClass',\
+         '_CPlayerActionMarker_DLLClass',\
+         '_CPlayerAnimator_DLLClass',\
+         '_CPlayer_DLLClass',\
+         '_CPlayerMarker_DLLClass',\
+         '_CPlayerView_DLLClass',\
+         '_CPlayerWeaponsEffects_DLLClass',\
+         '_CPlayerWeapons_DLLClass',\
+         '_CProjectile_DLLClass',\
+         '_CPyramidSpaceShip_DLLClass',\
+         '_CPyramidSpaceShipMarker_DLLClass',\
+         '_CReminder_DLLClass',\
+         '_CRobotDriving_DLLClass',\
+         '_CRobotFlying_DLLClass',\
+         '_CRollingStone_DLLClass',\
+         '_CScorpman_DLLClass',\
+         '_CShip_DLLClass',\
+         '_CShipMarker_DLLClass',\
+         '_CSoundHolder_DLLClass',\
+         '_CStormController_DLLClass',\
+         '_CSwitch_DLLClass',\
+         '_CTeleport_DLLClass',\
+         '_CTouchField_DLLClass',\
+         '_CTrigger_DLLClass',\
+         '_CTwister_DLLClass',\
+         '_CVoiceHolder_DLLClass',\
+         '_CWalker_DLLClass',\
+         '_CWatcher_DLLClass',\
+         '_CWatchPlayers_DLLClass',\
+         '_CWater_DLLClass',\
+         '_CWeaponItem_DLLClass',\
+         '_CWerebull_DLLClass',\
+         '_CWoman_DLLClass',\
+         '_CWorldBase_DLLClass',\
+         '_CWorldLink_DLLClass',\
+         '_CWorldSettingsController_DLLClass'\
+        ]\"\
+        -g4 --source-map-base http://localhost:5000/cmake-em-build/ \
+      ")
+    set_target_properties(ssam PROPERTIES COMPILE_FLAGS "-s MAIN_MODULE=1 -s FULL_ES2=1")
 endif()
 
 if(LINUX)
@@ -1125,10 +1269,130 @@ endif()
 
 if(STATICALLY_LINKED)
   if (EMSCRIPTEN)
-    target_link_libraries(ssam ${ENTITIESMPLIB} ${GAMEMPLIB} ${ShadersLIB} amp11lib)
+    target_link_libraries(ssam ${ENTITIESMPLIB} ${GAMEMPLIB} ${SHADERSLIB} amp11lib GL)
   else()
-    target_link_libraries(ssam -Wl,--whole-archive ${ENTITIESMPLIB} ${GAMEMPLIB} ${ShadersLIB} amp11lib -Wl,--no-whole-archive)
-    target_link_libraries(ssam -Wl,--whole-archive vorbis -Wl,--no-whole-archive)
+    target_link_libraries(ssam -Wl,--undefined=GAME_Create
+      -Wl,--undefined=CAcid_DLLClass
+      -Wl,--undefined=CAirWave_DLLClass
+      -Wl,--undefined=CAmmoItem_DLLClass
+      -Wl,--undefined=CAmmoPack_DLLClass
+      -Wl,--undefined=CAnimationChanger_DLLClass
+      -Wl,--undefined=CAnimationHub_DLLClass
+      -Wl,--undefined=CArmorItem_DLLClass
+      -Wl,--undefined=CBackgroundViewer_DLLClass
+      -Wl,--undefined=CBasicEffects_DLLClass
+      -Wl,--undefined=CBeast_DLLClass
+      -Wl,--undefined=CBigHead_DLLClass
+      -Wl,--undefined=CBlendController_DLLClass
+      -Wl,--undefined=CBloodSpray_DLLClass
+      -Wl,--undefined=CBoneman_DLLClass
+      -Wl,--undefined=CBouncer_DLLClass
+      -Wl,--undefined=CBullet_DLLClass
+      -Wl,--undefined=CCamera_DLLClass
+      -Wl,--undefined=CCameraMarker_DLLClass
+      -Wl,--undefined=CCannonBall_DLLClass
+      -Wl,--undefined=CCatman_DLLClass
+      -Wl,--undefined=CCopier_DLLClass
+      -Wl,--undefined=CCounter_DLLClass
+      -Wl,--undefined=CCrateRider_DLLClass
+      -Wl,--undefined=CCyborgBike_DLLClass
+      -Wl,--undefined=CCyborg_DLLClass
+      -Wl,--undefined=CDamager_DLLClass
+      -Wl,--undefined=CDebris_DLLClass
+      -Wl,--undefined=CDestroyableArchitecture_DLLClass
+      -Wl,--undefined=CDevil_DLLClass
+      -Wl,--undefined=CDevilMarker_DLLClass
+      -Wl,--undefined=CDevilProjectile_DLLClass
+      -Wl,--undefined=CDoorController_DLLClass
+      -Wl,--undefined=CDragonman_DLLClass
+      -Wl,--undefined=CEffectMarker_DLLClass
+      -Wl,--undefined=CEffector_DLLClass
+      -Wl,--undefined=CElemental_DLLClass
+      -Wl,--undefined=CEnemyBase_DLLClass
+      -Wl,--undefined=CEnemyCounter_DLLClass
+      -Wl,--undefined=CEnemyDive_DLLClass
+      -Wl,--undefined=CEnemyFly_DLLClass
+      -Wl,--undefined=CEnemyMarker_DLLClass
+      -Wl,--undefined=CEnemyRunInto_DLLClass
+      -Wl,--undefined=CEnemySpawner_DLLClass
+      -Wl,--undefined=CEnvironmentBase_DLLClass
+      -Wl,--undefined=CEnvironmentMarker_DLLClass
+      -Wl,--undefined=CEruptor_DLLClass
+      -Wl,--undefined=CEyeman_DLLClass
+      -Wl,--undefined=CFish_DLLClass
+      -Wl,--undefined=CFishman_DLLClass
+      -Wl,--undefined=CFlame_DLLClass
+      -Wl,--undefined=CFogMarker_DLLClass
+      -Wl,--undefined=CGizmo_DLLClass
+      -Wl,--undefined=CGlobal_DLLClass
+      -Wl,--undefined=CGradientMarker_DLLClass
+      -Wl,--undefined=CGravityMarker_DLLClass
+      -Wl,--undefined=CGravityRouter_DLLClass
+      -Wl,--undefined=CHazeMarker_DLLClass
+      -Wl,--undefined=CHeadman_DLLClass
+      -Wl,--undefined=CHealthItem_DLLClass
+      -Wl,--undefined=CHuanman_DLLClass
+      -Wl,--undefined=CItem_DLLClass
+      -Wl,--undefined=CKeyItem_DLLClass
+      -Wl,--undefined=CLight_DLLClass
+      -Wl,--undefined=CLightning_DLLClass
+      -Wl,--undefined=CLightStyle_DLLClass
+      -Wl,--undefined=CMamut_DLLClass
+      -Wl,--undefined=CMamutman_DLLClass
+      -Wl,--undefined=CMantaman_DLLClass
+      -Wl,--undefined=CMarker_DLLClass
+      -Wl,--undefined=CMessageHolder_DLLClass
+      -Wl,--undefined=CMessageItem_DLLClass
+      -Wl,--undefined=CMirrorMarker_DLLClass
+      -Wl,--undefined=CModelDestruction_DLLClass
+      -Wl,--undefined=CModelHolder2_DLLClass
+      -Wl,--undefined=CModelHolder_DLLClass
+      -Wl,--undefined=CMovingBrush_DLLClass
+      -Wl,--undefined=CMovingBrushMarker_DLLClass
+      -Wl,--undefined=CMusicChanger_DLLClass
+      -Wl,--undefined=CMusicHolder_DLLClass
+      -Wl,--undefined=CNavigationMarker_DLLClass
+      -Wl,--undefined=CParticlesHolder_DLLClass
+      -Wl,--undefined=CPendulum_DLLClass
+      -Wl,--undefined=CPipebomb_DLLClass
+      -Wl,--undefined=CPlayerActionMarker_DLLClass
+      -Wl,--undefined=CPlayerAnimator_DLLClass
+      -Wl,--undefined=CPlayer_DLLClass
+      -Wl,--undefined=CPlayerMarker_DLLClass
+      -Wl,--undefined=CPlayerView_DLLClass
+      -Wl,--undefined=CPlayerWeaponsEffects_DLLClass
+      -Wl,--undefined=CPlayerWeapons_DLLClass
+      -Wl,--undefined=CProjectile_DLLClass
+      -Wl,--undefined=CPyramidSpaceShip_DLLClass
+      -Wl,--undefined=CPyramidSpaceShipMarker_DLLClass
+      -Wl,--undefined=CReminder_DLLClass
+      -Wl,--undefined=CRobotDriving_DLLClass
+      -Wl,--undefined=CRobotFixed_DLLClass
+      -Wl,--undefined=CRobotFlying_DLLClass
+      -Wl,--undefined=CRollingStone_DLLClass
+      -Wl,--undefined=CScorpman_DLLClass
+      -Wl,--undefined=CShip_DLLClass
+      -Wl,--undefined=CShipMarker_DLLClass
+      -Wl,--undefined=CSoundHolder_DLLClass
+      -Wl,--undefined=CStormController_DLLClass
+      -Wl,--undefined=CSwitch_DLLClass
+      -Wl,--undefined=CTeleport_DLLClass
+      -Wl,--undefined=CTouchField_DLLClass
+      -Wl,--undefined=CTrigger_DLLClass
+      -Wl,--undefined=CTwister_DLLClass
+      -Wl,--undefined=CVoiceHolder_DLLClass
+      -Wl,--undefined=CWalker_DLLClass
+      -Wl,--undefined=CWatcher_DLLClass
+      -Wl,--undefined=CWatchPlayers_DLLClass
+      -Wl,--undefined=CWater_DLLClass
+      -Wl,--undefined=CWeaponItem_DLLClass
+      -Wl,--undefined=CWerebull_DLLClass
+      -Wl,--undefined=CWoman_DLLClass
+      -Wl,--undefined=CWorldBase_DLLClass
+      -Wl,--undefined=CWorldLink_DLLClass
+      -Wl,--undefined=CWorldSettingsController_DLLClass
+      ${ENTITIESMPLIB} ${GAMEMPLIB} ${SHADERSLIB}  )
+    target_link_libraries(ssam amp11lib vorbis)
   endif()
 endif()
 

@@ -18,6 +18,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // GLFUNCTION(dll, output, name, inputs, params, required)
 
 
+#ifdef EMSCRIPTEN
+#include "GL/gl.h"
+#endif
 
 /*
  * Miscellaneous
@@ -191,6 +194,8 @@ DLLFUNCTION( OGL, void , glTranslatef,( GLfloat x, GLfloat y, GLfloat z ),0,0);
  * Display Lists
  */
 
+/* gl4es issues with glCallLIst */
+#ifndef EMSCRIPTEN
 DLLFUNCTION( OGL, GLboolean , glIsList,( GLuint list ),0,0);
 
 DLLFUNCTION( OGL, void , glDeleteLists,( GLuint list, GLsizei range ),0,0);
@@ -207,7 +212,7 @@ DLLFUNCTION( OGL, void , glCallLists,( GLsizei n, GLenum type,
                                      const GLvoid *lists ),0,0);
 
 DLLFUNCTION( OGL, void , glListBase,( GLuint base ),0,0);
-
+#endif
 
 
 /*
@@ -426,7 +431,7 @@ DLLFUNCTION( OGL, void , glTexCoordPointer,( GLint size, GLenum type,
                                            GLsizei stride, const GLvoid *ptr ),0,0);
 
 DLLFUNCTION( OGL, void , glEdgeFlagPointer,( GLsizei stride,
-                                           const GLboolean *ptr ),0,0);
+                                           const GLvoid *ptr ),0,0);
 
 DLLFUNCTION( OGL, void , glGetPointerv,( GLenum pname, void **params ),0,0);
 
@@ -748,6 +753,7 @@ DLLFUNCTION( OGL, void , glPopName,( void ),0,0);
 /*
  * 1.0 Extensions
  */
+#ifndef EMSCRIPTEN
 
 /* GL_EXT_blend_minmax */
 DLLFUNCTION( OGL, void , glBlendEquationEXT,( GLenum mode ),0,0);
@@ -863,10 +869,11 @@ DLLFUNCTION( OGL, void , glGetColorTableParameterfvEXT,( GLenum target,
 DLLFUNCTION( OGL, void , glGetColorTableParameterivEXT,( GLenum target,
                                                        GLenum pname,
                                                        GLint *params ),0,0);
-
+#endif
 
 /* GL_SGIS_multitexture */
 
+#ifndef EMSCRIPTEN
 DLLFUNCTION( OGL, void , glMultiTexCoord1dSGIS,(GLenum target, GLdouble s),0,0);
 DLLFUNCTION( OGL, void , glMultiTexCoord1dvSGIS,(GLenum target, const GLdouble *v),0,0);
 DLLFUNCTION( OGL, void , glMultiTexCoord1fSGIS,(GLenum target, GLfloat s),0,0);
@@ -960,13 +967,14 @@ DLLFUNCTION( OGL, void , glPointParameterfEXT,( GLenum pname, GLfloat param ),0,
 DLLFUNCTION( OGL, void , glPointParameterfvEXT,( GLenum pname,
                                                const GLfloat *params ),0,0);
 
+#endif
 
 /* 1.2 functions */
 DLLFUNCTION( OGL, void , glDrawRangeElements,( GLenum mode, GLuint start,
 	GLuint end, GLsizei count, GLenum type, const GLvoid *indices ),0,0);
 
 DLLFUNCTION( OGL, void , glTexImage3D,( GLenum target, GLint level,
-                                      GLenum internalFormat,
+                                      GLint internalFormat,
                                       GLsizei width, GLsizei height,
                                       GLsizei depth, GLint border,
                                       GLenum format, GLenum type,

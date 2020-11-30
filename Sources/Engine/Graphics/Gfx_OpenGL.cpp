@@ -29,6 +29,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include <Engine/Base/ListIterator.inl>
 
+
 BOOL _TBCapability = FALSE;
 
 extern INDEX ogl_iTBufferEffect;
@@ -80,9 +81,15 @@ extern INDEX GFX_iTexModulation[GFX_MAXTEXUNITS];
 
 BOOL  glbUsingVARs = FALSE;   // vertex_array_range
 
+#if defined(STATICALLY_LINKED) && defined(EMSCRIPTEN)
+#include "GL/gl.h"
+#define DLLFUNCTION(dll, output, name, inputs, params, required) \
+  output (__stdcall *p##name) inputs = name;
+#else
 // define gl function pointers
 #define DLLFUNCTION(dll, output, name, inputs, params, required) \
   output (__stdcall *p##name) inputs = NULL;
+#endif
 #include "gl_functions.h"
 #undef DLLFUNCTION
 
@@ -154,10 +161,17 @@ void CGfxLibrary::TestExtension_OGL( ULONG ulFlag, const char *strName)
   if( HasExtension( go_strExtensions, strName)) AddExtension_OGL( ulFlag, strName);
 }
 
+#ifdef EMSCRIPTEN
+extern "C" void initialize_gl4es();
+#endif
 
 // prepares OpenGL drawing context
 void CGfxLibrary::InitContext_OGL(void)
-{
+{ 
+  #ifdef EMSCRIPTEN
+    initialize_gl4es();
+  #endif
+
   // must have context
   ASSERT( gl_pvpActive!=NULL);
 

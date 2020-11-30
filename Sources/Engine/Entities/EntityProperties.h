@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include <Engine/Base/FileName.h>
 #include <Engine/Entities/Entity.h>
+#include "Registry.h"
 
 /////////////////////////////////////////////////////////////////////
 // Classes and macros for defining enums for entity properties
@@ -244,9 +245,14 @@ public:
  #define DECLSPEC_DLLEXPORT
 #endif
 
+#define STRINGIFY2( x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
+#define PASTE2( a, b) a##b
+#define PASTE( a, b) PASTE2( a, b)
+
 // macro for defining entity class DLL structures
 #define ENTITY_CLASSDEFINITION(classname, basename, descriptivename, iconfilename, id)\
-  extern "C" DECLSPEC_DLLEXPORT CDLLEntityClass classname##_DLLClass; \
+  extern "C" DECLSPEC_DLLEXPORT CDLLEntityClass PASTE(classname, _DLLClass); \
   CDLLEntityClass classname##_DLLClass = {                            \
     classname##_properties,                                           \
     classname##_propertiesct,                                         \
@@ -266,14 +272,17 @@ public:
     &classname##_OnWorldTick,                                         \
     &classname##_OnWorldRender,                                       \
     &classname##_OnWorldEnd                                           \
-  }
+  };                                                                   \
+  bool PASTE(_reg,classname) = Registry::insert(STRINGIFY(PASTE(classname, _DLLClass)), (void*)&PASTE(classname,_DLLClass));
+  
 
 #define ENTITY_CLASSDEFINITION_BASE(classname, id)                    \
-  extern "C" DECLSPEC_DLLEXPORT CDLLEntityClass classname##_DLLClass; \
+  extern "C" DECLSPEC_DLLEXPORT CDLLEntityClass PASTE(classname,_DLLClass); \
   CDLLEntityClass classname##_DLLClass = {                            \
     NULL,0, NULL,0, NULL,0, "", "", id,                               \
     NULL, NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL                    \
-  }
+  };                                                                   \
+  bool PASTE(_reg,classname) = Registry::insert(STRINGIFY(PASTE(classname, _DLLClass)), (void*)&PASTE(classname,_DLLClass));
 
 inline ENGINE_API void ClearToDefault(FLOAT &f) { f = 0.0f; };
 inline ENGINE_API void ClearToDefault(INDEX &i) { i = 0; };

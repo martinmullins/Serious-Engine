@@ -2,6 +2,7 @@
 
 #include <Engine/Engine.h>
 #include "SDL.h"
+#include <assert.h>
 
 static void FailFunction_t(const char *strName) {
   ThrowF_t(TRANS("Required function %s not found."), strName);
@@ -15,15 +16,22 @@ static void sdlCheckError(BOOL bRes, const char *strDescription)
   WarningMessage("%s: %s", strDescription, sdlError);
 }
 
+#if defined(STATICALLY_LINKED) && defined(EMSCRIPTEN)
+  #include "GL/gl.h"
+#endif
 static void OGL_SetFunctionPointers_t(HINSTANCE hiOGL)
 {
   const char *strName;
   // get gl function pointers
-
-  #define DLLFUNCTION(dll, output, name, inputs, params, required) \
-    strName = #name;  \
-    p##name = (output (__stdcall*) inputs) SDL_GL_GetProcAddress(strName); \
-    if( required && p##name == NULL) FailFunction_t(strName);
+  #if defined(STATICALLY_LINKED) && defined(EMSCRIPTEN)
+    #define DLLFUNCTION(dll, output, name, inputs, params, required) \
+      assert(p##name == name);
+  #else
+    #define DLLFUNCTION(dll, output, name, inputs, params, required) \
+      strName = #name;  \
+      p##name = (output (__stdcall*) inputs) SDL_GL_GetProcAddress(strName); \
+      if( required && p##name == NULL) FailFunction_t(strName);
+  #endif
   #include "Engine/Graphics/gl_functions.h"
   #undef DLLFUNCTION
 }
@@ -81,9 +89,64 @@ BOOL CGfxLibrary::CreateContext_OGL(HDC hdc)
   return TRUE;
 }
 
+#ifdef EMSCRIPTEN
+#include "gl4es/include/GL/gl.h"
+#include "gl4es/include/GL/glext.h"
+
+extern "C" void gl4es_glLockArrays(GLint first, GLsizei count);
+extern "C" void gl4es_glUnlockArrays();
+extern "C" void gl4es_glActiveTexture(GLenum texture);
+extern "C" void gl4es_glClientActiveTexture(GLenum texture);
+#endif
 void *CGfxLibrary::OGL_GetProcAddress(const char *procname)
 {
+  #ifdef EMSCRIPTEN
+    std::string pn(procname);
+    
+    if (std::string("glActiveTextureARB").compare(pn) == 0) {
+      return (void*)&gl4es_glActiveTexture;
+    }
+
+    if ( std::string( "glClientActiveTextureARB").compare(pn) == 0) {
+      return (void*)&gl4es_glClientActiveTexture;
+    }
+
+    if (std::string("glLockArraysEXT").compare(pn) == 0) {
+      return (void*)&gl4es_glLockArrays;
+    }
+
+    if (std::string("glUnlockArraysEXT").compare(pn) == 0) {
+      return (void*)&gl4es_glUnlockArrays;
+    }
+
+    //if (std::string("glPNTrianglesiATI").compare(pn) == 0) {
+    //  return (void*)&glPNTrianglesiATI;
+    //}
+
+    //if (std::string("glPNTrianglesfATI").compare(pn) == 0) {
+    //  return (void*)&glPNTrianglesfATI;
+    //}
+
+    //if (std::string("wglSwapIntervalEXT").compare(pn) == 0) {
+    //  return (void*) NULL;
+    //}
+
+    //if (std::string("wglGetSwapIntervalEXT").compare(pn) == 0) {
+    //  return (void*) NULL;
+    //}
+
+    void* gp = SDL_GL_GetProcAddress(procname);
+    CPrintF(">>>>>## SDL_GL_GetPRocAddress: %s %p\n", procname, gp);
+    if (gp) {
+      return gp;
+    }
+
+    CPrintF("MISSING OGL_GetProcAddres: %s\n", procname);
+    return (void*) NULL;
+  #else
     return(SDL_GL_GetProcAddress(procname));
+  #endif
+  return NULL;
 }
 
 // prepares pixel format for OpenGL context

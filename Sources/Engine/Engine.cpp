@@ -216,6 +216,8 @@ static void DetectCPU(void)
   sys_bCPUHasCMOV = bCMOV!=0;
 #ifdef PLATFORM_PANDORA
   sys_iCPUMHz = 400;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
+#elif defined(EMSCRIPTEN)
+  sys_iCPUMHz = 200;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
 #elif defined(PLATFORM_PYRA)
   sys_iCPUMHz = 1000;
 #else
@@ -413,6 +415,8 @@ static void SetupMemoryManager(void)
       sys_iRAMPhys = 512;
     fclose(esrev);
   };
+  #elif EMSCRIPTEN
+    sys_iRAMPhys = 256; // conservative here, there is 256MB models and 512MB...
   #else
   sys_iRAMPhys = 1;  // !!! FIXME: This is bad. Bad. BAD.
   #endif

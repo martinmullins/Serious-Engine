@@ -81,6 +81,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 # define INDEX_T unsigned short
 # define INDEX_GL GL_UNSIGNED_SHORT
 # define FASTMATH __attribute__((pcs("aapcs-vfp")))
+#elif defined(EMSCRIPTEN)
+# define INDEX_T unsigned short
+# define INDEX_GL GL_UNSIGNED_SHORT
+# define FASTMATH
 #elif defined(__arm__)
 # define INDEX_T unsigned short
 # define INDEX_GL GL_UNSIGNED_SHORT

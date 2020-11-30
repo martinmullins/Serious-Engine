@@ -1025,8 +1025,12 @@ expression
           if (stResult.st_sttType==STT_VOID) {
             // just call the function
             $$.sttType = STT_VOID;
-            PUSHPARAMS;
-            ((void (*)(FUNCSIG))$1->ss_pvValue)(CALLPARAMS);
+            if ($1->ss_strName.Matches("FreeUnusedStock")) {
+              ((void (*)(void))$1->ss_pvValue)();
+            } else {
+              PUSHPARAMS;
+              ((void (*)(FUNCSIG))$1->ss_pvValue)(CALLPARAMS);
+            }
           // if index
           } else if (stResult.st_sttType==STT_INDEX) {
             // call the function and return result

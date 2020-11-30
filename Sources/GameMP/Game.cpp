@@ -33,6 +33,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "Camera.h"
 #include "LCDDrawing.h"
 
+#ifdef STATICALLY_LINKED
+#include "Registry.h"
+#endif
+
 FLOAT con_fHeightFactor = 0.5f;
 FLOAT con_tmLastLines   = 5.0f;
 INDEX con_bTalk = 0;
@@ -78,12 +82,16 @@ extern "C"
 #define EXPORTABLE
 #endif
 
-EXPORTABLE CGame *GAME_Create(void)
+EXPORTABLE CGame * GAME_Create(void)
 {
   _pGame = new CGame;
 
   return _pGame;
 }
+
+#ifdef STATICALLY_LINKED
+bool _reg_GAME_Create = Registry::insert("GAME_Create", (void*)&GAME_Create);
+#endif
 
 }  // extern "C"
 

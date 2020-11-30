@@ -113,6 +113,7 @@ extern void MimicTexParams_OGL( CTexParams &tpLocal)
   // keep last texture params (for tex upload and stuff)
   _tpCurrent = &tpLocal;
   _pfGfxProfile.StopTimer( CGfxProfile::PTI_TEXTUREPARAMS);
+  OGL_CHECKERROR;
 }
 
 

@@ -16,9 +16,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 
 // ENABLE/DISABLE FUNCTIONS
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#define static 
+#include "Engine/Graphics/Gfx_wrapper_OpenGL.h"
+#else
+#define EMSCRIPTEN_KEEPALIVE
+#endif
 
-
-static void ogl_EnableTexture(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableTexture(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -43,7 +49,7 @@ static void ogl_EnableTexture(void)
 
 
 
-static void ogl_DisableTexture(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableTexture(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -69,7 +75,7 @@ static void ogl_DisableTexture(void)
 
 
 
-static void ogl_EnableDepthTest(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableDepthTest(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -92,7 +98,7 @@ static void ogl_EnableDepthTest(void)
 }
 
 
-static void ogl_DisableDepthTest(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableDepthTest(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -116,7 +122,7 @@ static void ogl_DisableDepthTest(void)
 }
 
 
-static void ogl_EnableDepthBias(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableDepthBias(void)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
@@ -131,7 +137,7 @@ static void ogl_EnableDepthBias(void)
 }
 
 
-static void ogl_DisableDepthBias(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableDepthBias(void)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
@@ -147,7 +153,7 @@ static void ogl_DisableDepthBias(void)
 
 
 
-static void ogl_EnableDepthWrite(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableDepthWrite(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -172,7 +178,7 @@ static void ogl_EnableDepthWrite(void)
 
 
 
-static void ogl_DisableDepthWrite(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableDepthWrite(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -197,7 +203,7 @@ static void ogl_DisableDepthWrite(void)
 
 
 
-static void ogl_EnableDither(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableDither(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -222,7 +228,7 @@ static void ogl_EnableDither(void)
 
 
 
-static void ogl_DisableDither(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableDither(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -247,7 +253,7 @@ static void ogl_DisableDither(void)
 
 
 
-static void ogl_EnableAlphaTest(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableAlphaTest(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -272,7 +278,7 @@ static void ogl_EnableAlphaTest(void)
 
 
 
-static void ogl_DisableAlphaTest(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableAlphaTest(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -297,7 +303,7 @@ static void ogl_DisableAlphaTest(void)
 
 
 
-static void ogl_EnableBlend(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableBlend(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -325,7 +331,7 @@ static void ogl_EnableBlend(void)
 
 
 
-static void ogl_DisableBlend(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableBlend(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -354,7 +360,7 @@ static void ogl_DisableBlend(void)
 
 
 
-static void ogl_EnableClipping(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableClipping(void)
 {
   // only if supported
   if( !(_pGfx->gl_ulFlags&GLF_EXT_CLIPHINT)) return;
@@ -383,7 +389,7 @@ static void ogl_EnableClipping(void)
 
 
 
-static void ogl_DisableClipping(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableClipping(void)
 {
   // only if allowed and supported
   if( gap_iOptimizeClipping<2 || !(_pGfx->gl_ulFlags&GLF_EXT_CLIPHINT)) return;
@@ -413,7 +419,7 @@ static void ogl_DisableClipping(void)
 
 
 
-static void ogl_EnableClipPlane(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableClipPlane(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -437,7 +443,7 @@ static void ogl_EnableClipPlane(void)
 
 
 
-static void ogl_DisableClipPlane(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableClipPlane(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -462,7 +468,7 @@ static void ogl_DisableClipPlane(void)
 
 
 // enable usage of color array for subsequent rendering
-static void ogl_EnableColorArray(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableColorArray(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -488,7 +494,7 @@ static void ogl_EnableColorArray(void)
 
 
 // enable usage of constant color for subsequent rendering
-static void ogl_DisableColorArray(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableColorArray(void)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -514,7 +520,7 @@ static void ogl_DisableColorArray(void)
 
 
 // enable truform rendering
-static void ogl_EnableTruform(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_EnableTruform(void)
 {
   // skip if Truform isn't set
   if( truform_iLevel<1) return;
@@ -542,7 +548,7 @@ static void ogl_EnableTruform(void)
 
 
 // disable truform rendering
-static void ogl_DisableTruform(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_DisableTruform(void)
 {
   // skip if Truform isn't set
   if( truform_iLevel<1) return;
@@ -600,7 +606,7 @@ __forceinline GfxBlend BlendFromOGL( GLenum gFunc) {
 
 
 // set blending operations
-static void ogl_BlendFunc( GfxBlend eSrc, GfxBlend eDst)
+static void EMSCRIPTEN_KEEPALIVE ogl_BlendFunc( GfxBlend eSrc, GfxBlend eDst)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -633,7 +639,7 @@ static void ogl_BlendFunc( GfxBlend eSrc, GfxBlend eDst)
 
 
 // color buffer writing enable
-static void ogl_SetColorMask( ULONG ulColorMask)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetColorMask( ULONG ulColorMask)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   _ulCurrentColorMask = ulColorMask; // keep for Get...()
@@ -683,7 +689,7 @@ __forceinline GfxComp CompFromOGL( GLenum gFunc) {
 
 
 // set depth buffer compare mode
-static void ogl_DepthFunc( GfxComp eFunc)
+static void EMSCRIPTEN_KEEPALIVE ogl_DepthFunc( GfxComp eFunc)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -711,7 +717,7 @@ static void ogl_DepthFunc( GfxComp eFunc)
 
     
 // set depth buffer range
-static void ogl_DepthRange( FLOAT fMin, FLOAT fMax)
+static void EMSCRIPTEN_KEEPALIVE ogl_DepthRange( FLOAT fMin, FLOAT fMax)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -738,7 +744,7 @@ static void ogl_DepthRange( FLOAT fMin, FLOAT fMax)
 
 
 // set face culling
-static void ogl_CullFace( GfxFace eFace)
+static void EMSCRIPTEN_KEEPALIVE ogl_CullFace( GfxFace eFace)
 {
   // check consistency and face
   ASSERT( eFace==GFX_FRONT || eFace==GFX_BACK || eFace==GFX_NONE);
@@ -775,7 +781,7 @@ static void ogl_CullFace( GfxFace eFace)
 
 
 // set front face
-static void ogl_FrontFace( GfxFace eFace)
+static void EMSCRIPTEN_KEEPALIVE ogl_FrontFace( GfxFace eFace)
 {
   // check consistency and face
   ASSERT( eFace==GFX_CW || eFace==GFX_CCW);
@@ -807,7 +813,7 @@ static void ogl_FrontFace( GfxFace eFace)
 
 
 // set custom clip plane 
-static void ogl_ClipPlane( const DOUBLE *pdViewPlane)
+static void EMSCRIPTEN_KEEPALIVE ogl_ClipPlane( const DOUBLE *pdViewPlane)
 {
   // check API and plane
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL && pdViewPlane!=NULL);
@@ -823,7 +829,7 @@ static void ogl_ClipPlane( const DOUBLE *pdViewPlane)
 
 
 // set texture matrix
-static void ogl_SetTextureMatrix( const FLOAT *pfMatrix/*=NULL*/)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetTextureMatrix( const FLOAT *pfMatrix/*=NULL*/)
 {
   // check API
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -843,7 +849,7 @@ static void ogl_SetTextureMatrix( const FLOAT *pfMatrix/*=NULL*/)
 
 
 // set view matrix 
-static void ogl_SetViewMatrix( const FLOAT *pfMatrix/*=NULL*/)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetViewMatrix( const FLOAT *pfMatrix/*=NULL*/)
 {
   // check API
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -866,7 +872,7 @@ static void ogl_SetViewMatrix( const FLOAT *pfMatrix/*=NULL*/)
 
 
 // set orthographic matrix
-static void ogl_SetOrtho( const FLOAT fLeft,   const FLOAT fRight, const FLOAT fTop,
+static void EMSCRIPTEN_KEEPALIVE ogl_SetOrtho( const FLOAT fLeft,   const FLOAT fRight, const FLOAT fTop,
                           const FLOAT fBottom, const FLOAT fNear,  const FLOAT fFar,
                           const BOOL bSubPixelAdjust/*=FALSE*/)
 {
@@ -893,7 +899,7 @@ static void ogl_SetOrtho( const FLOAT fLeft,   const FLOAT fRight, const FLOAT f
 
 
 // set frustrum matrix
-static void ogl_SetFrustum( const FLOAT fLeft, const FLOAT fRight,
+static void EMSCRIPTEN_KEEPALIVE ogl_SetFrustum( const FLOAT fLeft, const FLOAT fRight,
                             const FLOAT fTop,  const FLOAT fBottom,
                             const FLOAT fNear, const FLOAT fFar)
 {
@@ -920,7 +926,7 @@ static void ogl_SetFrustum( const FLOAT fLeft, const FLOAT fRight,
 
 
 // set polygon mode (point, line or fill)
-static void ogl_PolygonMode( GfxPolyMode ePolyMode)
+static void EMSCRIPTEN_KEEPALIVE ogl_PolygonMode( GfxPolyMode ePolyMode)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
@@ -943,7 +949,7 @@ static void ogl_PolygonMode( GfxPolyMode ePolyMode)
 
 
 // set texture wrapping mode
-static void ogl_SetTextureWrapping( enum GfxWrap eWrapU, enum GfxWrap eWrapV)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetTextureWrapping( enum GfxWrap eWrapU, enum GfxWrap eWrapV)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
 #ifndef NDEBUG
@@ -962,7 +968,7 @@ static void ogl_SetTextureWrapping( enum GfxWrap eWrapU, enum GfxWrap eWrapV)
 
 
 // set texture modulation mode
-static void ogl_SetTextureModulation( INDEX iScale)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetTextureModulation( INDEX iScale)
 {
   // check consistency
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -996,7 +1002,7 @@ static void ogl_SetTextureModulation( INDEX iScale)
 
 
 // generate texture for API
-static void ogl_GenerateTexture( ULONG &ulTexObject)
+static void EMSCRIPTEN_KEEPALIVE ogl_GenerateTexture( ULONG &ulTexObject)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   _sfStats.StartTimer(CStatForm::STI_BINDTEXTURE);
@@ -1012,7 +1018,7 @@ static void ogl_GenerateTexture( ULONG &ulTexObject)
 
  
 // unbind texture from API
-static void ogl_DeleteTexture( ULONG &ulTexObject)
+static void EMSCRIPTEN_KEEPALIVE ogl_DeleteTexture( ULONG &ulTexObject)
 {
   // skip if already unbound
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
@@ -1034,7 +1040,7 @@ static void ogl_DeleteTexture( ULONG &ulTexObject)
 
 
 // prepare vertex array for API
-static void ogl_SetVertexArray( GFXVertex4 *pvtx, INDEX ctVtx)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetVertexArray( GFXVertex4 *pvtx, INDEX ctVtx)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ASSERT( ctVtx>0 && pvtx!=NULL && GFX_iActiveTexUnit==0);
@@ -1058,7 +1064,7 @@ static void ogl_SetVertexArray( GFXVertex4 *pvtx, INDEX ctVtx)
 
 
 // prepare normal array for API
-static void ogl_SetNormalArray( GFXNormal *pnor)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetNormalArray( GFXNormal *pnor)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ASSERT( pnor!=NULL);
@@ -1075,7 +1081,7 @@ static void ogl_SetNormalArray( GFXNormal *pnor)
 
 
 // prepare color array for API (and force rendering with color array!)
-static void ogl_SetColorArray( GFXColor *pcol)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetColorArray( GFXColor *pcol)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ASSERT( pcol!=NULL);
@@ -1091,7 +1097,7 @@ static void ogl_SetColorArray( GFXColor *pcol)
 
 
 // prepare texture coordinates array for API
-static void ogl_SetTexCoordArray( GFXTexCoord *ptex, BOOL b4/*=FALSE*/)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetTexCoordArray( GFXTexCoord *ptex, BOOL b4/*=FALSE*/)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ASSERT( ptex!=NULL);
@@ -1108,7 +1114,7 @@ static void ogl_SetTexCoordArray( GFXTexCoord *ptex, BOOL b4/*=FALSE*/)
 
 
 // set constant color (and force rendering w/o color array!)
-static void ogl_SetConstantColor( COLOR col)
+static void EMSCRIPTEN_KEEPALIVE ogl_SetConstantColor( COLOR col)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ogl_DisableColorArray();
@@ -1123,20 +1129,61 @@ static void ogl_SetConstantColor( COLOR col)
 
 
 // draw prepared arrays
-static void ogl_DrawElements( INDEX ctElem, INDEX_T *pidx)
+static void EMSCRIPTEN_KEEPALIVE ogl_DrawElements( INDEX ctElem, INDEX_T *pidx)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
 #ifndef NDEBUG
   // check if all indices are inside lock count (or smaller than 65536)
   if( pidx!=NULL) for( INDEX i=0; i<ctElem; i++) ASSERT( pidx[i] < GFX_ctVertices);
+#elif defined(EMSCRIPTEN)
+  if( pidx!=NULL) {
+    for( INDEX i=0; i<ctElem; i++) {
+        if (pidx[i] >= GFX_ctVertices) {
+          CPrintF("INDICE IS OUTSIDE LOCK COUNT !!! %d %d\n", pidx[i], GFX_ctVertices);
+          fflush(stdout);
+        }
+    } 
+  }
+  if (pglDrawElements != gl4es_glDrawElements) {
+    CPrintF("OKOKKOOKOKOKOK\n");
+    fflush(stdout);
+  }
 #endif
 
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
   _pGfx->gl_ctTotalTriangles += ctElem/3;  // for profiling
 
   // arrays or elements
-  if( pidx==NULL) pglDrawArrays( GL_QUADS, 0, ctElem);
-  else pglDrawElements( GL_TRIANGLES, ctElem, INDEX_GL, pidx);
+  if( pidx==NULL) {
+    pglDrawArrays( GL_QUADS, 0, ctElem);
+    if(pglGetError() != GL_NO_ERROR) {
+      CPrintF("!!! glDrawArrays ERROR count=%d\n", ctElem);
+    }
+  }
+  else {
+    if (pidx ) {
+      pglDrawElements( GL_TRIANGLES, ctElem, INDEX_GL, pidx);
+      GLenum rc;
+      if((rc = pglGetError()) != GL_NO_ERROR) {
+        //printf("glDrawElements() failed\n");
+        //printf("  GFX_ctVertices: %d\n", GFX_ctVertices);
+        //printf("  ctElem: %d\n", ctElem);
+        //printf("   sindices: [ ");
+        //for( INDEX i=0; i< ctElem; i++) {
+        //  if (pidx[i] >= GFX_ctVertices) {
+        //    printf("<!!>");
+        //  }
+        //  printf("%hu, ", pidx[i]);
+        //}
+        //printf("]\n");
+        //fflush(stdout);
+        //CPrintF("!!! glDrawElements ERROR %d %d != 0, errno=%d, count=%d\n",  (unsigned int)pidx, sizeof(INDEX_T),  rc, ctElem);
+        fflush(stdout);
+        //abort();
+      }
+    }
+  }
+
   OGL_CHECKERROR;
 
   _sfStats.StopTimer(CStatForm::STI_GFXAPI);
@@ -1145,7 +1192,7 @@ static void ogl_DrawElements( INDEX ctElem, INDEX_T *pidx)
 
 
 // force finish of API rendering queue
-static void ogl_Finish(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_Finish(void)
 {
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
@@ -1160,13 +1207,17 @@ static void ogl_Finish(void)
 
 
 // routines for locking and unlocking compiled vertex arrays
-static void ogl_LockArrays(void)
+static void EMSCRIPTEN_KEEPALIVE ogl_LockArrays(void)
 {
   // only if supported
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ASSERT( GFX_ctVertices>0 && !_bCVAReallyLocked);
   if( !(_pGfx->gl_ulFlags&GLF_EXT_COMPILEDVERTEXARRAY)) return;
-  pglLockArraysEXT( 0, GFX_ctVertices);
+  pglLockArraysEXT( (int)0, (int)GFX_ctVertices);
   OGL_CHECKERROR;
  _bCVAReallyLocked = TRUE;
 }
+
+#ifdef EMSCRIPTEN
+#undef static 
+#endif

@@ -27,6 +27,10 @@ cm() {
     -DUSE_I386_NASM_ASM=FALSE \
     -DUSE_ASM=FALSE \
     -DSTATICALLY_LINKED=ON \
+    -DNOX11=ON \
+    -DNOEGL=ON \
+    -DSTATICLIB=ON \
+    -DTFE=TRUE \
     "$SRC_ROOT"
 
 

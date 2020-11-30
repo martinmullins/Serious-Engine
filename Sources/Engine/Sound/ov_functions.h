@@ -17,8 +17,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // DLLFUNCTION(dll, output, name, inputs, params, required)
 
 DLLFUNCTION( OVF, int, ov_clear, (OggVorbis_File *vf), 4, 0)
-DLLFUNCTION( OVF, int, ov_open, (FILE *f, OggVorbis_File *vf, char *initial, long ibytes), 16,0);
-DLLFUNCTION( OVF, int, ov_open_callbacks, (void *datasource, OggVorbis_File *vf, char *initial, long ibytes, ov_callbacks callbacks), 32,0);
+DLLFUNCTION( OVF, int, ov_open, (FILE *f, OggVorbis_File *vf, const char *initial, long ibytes), 16,0);
+DLLFUNCTION( OVF, int, ov_open_callbacks, (void *datasource, OggVorbis_File *vf, const char *initial, long ibytes, ov_callbacks callbacks), 32,0);
 #ifdef USE_TREMOR
 DLLFUNCTION( OVF, long, ov_read, (OggVorbis_File *vf,char *buffer,int length, int *bitstream), 16,0);
 #else

@@ -274,7 +274,7 @@ extern void gfxFlushQuads(void);
 
 
 // check GFX errors only in debug builds
-#ifndef NDEBUG
+#if !defined(NDEBUG)
   extern void OGL_CheckError(void);
   #define OGL_CHECKERROR     OGL_CheckError();
 
@@ -282,6 +282,9 @@ extern void gfxFlushQuads(void);
   extern void D3D_CheckError(HRESULT hr);
   #define D3D_CHECKERROR(hr) D3D_CheckError(hr);
   #endif
+#elif defined(EMSCRIPTEN)
+  extern void OGL_CheckError(const char* fn, const char* file, int lineno);
+  #define OGL_CHECKERROR     OGL_CheckError(__func__, __FILE__, __LINE__);
 #else
   #define OGL_CHECKERROR     (void)(0);
   #define D3D_CHECKERROR(hr) (void)(0);

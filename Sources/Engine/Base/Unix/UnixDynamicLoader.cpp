@@ -3,9 +3,12 @@
 /* rcg10072001 Implemented. */
 
 #include <dlfcn.h>
+#include <stdio.h>
 
 #include <Engine/Engine.h>
 #include <Engine/Base/DynamicLoader.h>
+
+#include "Registry.h"
 
 class CUnixDynamicLoader : public CDynamicLoader
 {
@@ -51,10 +54,14 @@ const char *CUnixDynamicLoader::GetError(void)
 
 void *CUnixDynamicLoader::FindSymbol(const char *sym)
 {
-    //printf("Looking for symbol %s\n", sym);
+    void* reg = Registry::lookup(sym);
+    printf("Looking for symbol ^ %s\n", sym);
+    fflush(stdout);
     void *retval = NULL;
     if (module != NULL) {
         retval = ::dlsym(module, sym);
+        printf("    >> %s\n", (retval == reg ? "TRUE" : "FALSE"));
+        fflush(stdout);
         SetError();
     }
 
@@ -64,6 +71,7 @@ void *CUnixDynamicLoader::FindSymbol(const char *sym)
 
 void CUnixDynamicLoader::DoOpen(const char *lib)
 {
+    fprintf(stderr, "DL OPEN: %s\n", lib);
     module = ::dlopen(lib, RTLD_LAZY | RTLD_GLOBAL);
     SetError();
 }
@@ -71,8 +79,10 @@ void CUnixDynamicLoader::DoOpen(const char *lib)
 
 CTFileName CDynamicLoader::ConvertLibNameToPlatform(const char *libname)
 {
-    #if PLATFORM_MACOSX
+    #if defined(PLATFORM_MACOSX)
     const char *DLLEXTSTR = ".dylib";
+    #elif defined(EMSCRIPTEN)
+    const char *DLLEXTSTR = ".wasm";
     #else
     const char *DLLEXTSTR = ".so";
     #endif
