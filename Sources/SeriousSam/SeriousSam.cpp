@@ -72,8 +72,8 @@ FLOAT sam_fPlayerOffset = 0.0f;
 
 // display mode settings
 INDEX sam_bFullScreenActive = FALSE;
-INDEX sam_iScreenSizeI = 640;  // current size of the window
-INDEX sam_iScreenSizeJ = 480;  // current size of the window
+INDEX sam_iScreenSizeI = 800;  // current size of the window
+INDEX sam_iScreenSizeJ = 600;  // current size of the window
 INDEX sam_iDisplayDepth  = 0;  // 0==default, 1==16bit, 2==32bit
 INDEX sam_iDisplayAdapter = 0; 
 INDEX sam_iGfxAPI = 0;         // 0==OpenGL
@@ -1906,14 +1906,14 @@ int main(int argc, char **argv)
   }
 
   #ifdef EMSCRIPTEN
-  setenv("LIBGL_ES", "2", 1);
-  setenv("LIBGL_GL", "15", 1);
-  setenv("LIBGL_USEVBO", "2", 1);
-  //setenv("LIBGL_FORCE16BITS", "1", 1);
-  //setenv("LIBGL_NOVAOCACHE", "1", 1);
-  setenv("LIBGL_SILENTSTUB", "0", 1);
-  setenv("LIBGL_LOGSHADERERROR", "1", 1);
-  //setenv("LIBGL_ALPHAHACK", "1", 1);
+  //setenv("LIBGL_ES", "2", 1);
+  //setenv("LIBGL_GL", "15", 1);
+  //setenv("LIBGL_USEVBO", "3", 1);
+  ////setenv("LIBGL_FORCE16BITS", "1", 1);
+  ////setenv("LIBGL_NOVAOCACHE", "1", 1);
+  //setenv("LIBGL_SILENTSTUB", "0", 1);
+  //setenv("LIBGL_LOGSHADERERROR", "1", 1);
+  ////setenv("LIBGL_ALPHAHACK", "1", 1);
   //setenv("LIBGL_NODEPTHTEX", "1", 1);
   //setenv("LIBGL_NOERROR", "1", 1);
 
@@ -2100,8 +2100,8 @@ void StartNewMode( enum GfxAPIType eGfxAPI, INDEX iAdapter, PIX pixSizeI, PIX pi
     // report failure and reset to default resolution
     _iDisplayModeChangeFlag = 2;  // failure
     CPrintF( TRANS("Requested display mode could not be set!\n"));
-    pixSizeI = 640;
-    pixSizeJ = 480;
+    pixSizeI = 800;
+    pixSizeJ = 600;
     bFullScreenMode = TRUE;
     // try to revert to one of recovery modes
     for( INDEX iMode=0; iMode<ctDefaultModes; iMode++) {

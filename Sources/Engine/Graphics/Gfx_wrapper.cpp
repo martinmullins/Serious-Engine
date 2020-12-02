@@ -195,7 +195,7 @@ void OGL_CheckError(void)
     failed = 1;
   }
   if (failed) {
-    //abort();
+    abort();
   }
 #endif
 }

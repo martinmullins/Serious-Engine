@@ -1045,6 +1045,12 @@ static void EMSCRIPTEN_KEEPALIVE ogl_SetVertexArray( GFXVertex4 *pvtx, INDEX ctV
   ASSERT( _pGfx->gl_eCurrentAPI==GAT_OGL);
   ASSERT( ctVtx>0 && pvtx!=NULL && GFX_iActiveTexUnit==0);
   GFX_ctVertices = ctVtx;
+  // bug with emscripten OpenGL ES 2 emulation
+  #ifdef EMSCRIPTEN
+  EM_ASM ({
+    globalThis.ctVtx = $0;
+  }, ctVtx);
+  #endif
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
 
   pglDisableClientState( GL_TEXTURE_COORD_ARRAY);

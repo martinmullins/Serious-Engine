@@ -36,7 +36,7 @@ if(USE_CCACHE)
 endif()
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  set(USE_FLAGS "-s FULL_ES2=1 -s USE_SDL=2 -s USE_ZLIB=1 -s USE_OGG=1 -s USE_VORBIS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s SAFE_HEAP=0 -s STACK_OVERFLOW_CHECK=1 -s ASSERTIONS=1")
+  set(USE_FLAGS "-s FULL_ES2=1 -s USE_SDL=2 -s USE_ZLIB=1 -s USE_OGG=1 -s USE_VORBIS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s SAFE_HEAP=0 -s STACK_OVERFLOW_CHECK=2 -s ASSERTIONS=1")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${USE_FLAGS}")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${USE_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${USE_FLAGS}")
@@ -1098,7 +1098,8 @@ endif()
 
 if (EMSCRIPTEN)
     set_target_properties(ssam PROPERTIES LINK_FLAGS "\
-      --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/pre.js \
+      --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/emscripten/pre.js \
+      --post-js ${CMAKE_CURRENT_SOURCE_DIR}/emscripten/post.js \
       --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../preload@/ \
       -s ALLOW_MEMORY_GROWTH=1 \
       -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
@@ -1399,6 +1400,45 @@ endif()
 if(TFE)
  set_target_properties(ssam PROPERTIES OUTPUT_NAME "ssam-tfe")
 endif()
+
+if (EMSCRIPTEN)
+  add_custom_command(
+    OUTPUT "${PROJECT_BINARY_DIR}/scratch/pre.js"
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/emscripten/pre.js"  "${PROJECT_BINARY_DIR}/scratch/pre.js"
+    DEPENDS "${PROJECT_SOURCE_DIR}/emscripten/pre.js"
+    COMMENT "Depdency on \"pre.js\"")
+  add_custom_target(pre.js DEPENDS "${PROJECT_BINARY_DIR}/scratch/pre.js")
+  add_dependencies(ssam pre.js)
+
+  add_custom_command(
+    OUTPUT "${PROJECT_BINARY_DIR}/scratch/post.js"
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/emscripten/post.js" "${PROJECT_BINARY_DIR}/scratch/post.js"
+    DEPENDS "${PROJECT_SOURCE_DIR}/emscripten/post.js"
+    COMMENT "Depdency on \"post.js\"")
+  add_custom_target(post.js DEPENDS "${PROJECT_BINARY_DIR}/scratch/post.js")
+  add_dependencies(ssam post.js)
+
+  add_custom_command(
+    OUTPUT "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk"
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/emscripten/glbug-patch.awk"  "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk"
+    DEPENDS "${PROJECT_SOURCE_DIR}/emscripten/glbug-patch.awk"
+    COMMENT "Depdency on \"glbug-patch.awk\"")
+  add_custom_target(glbug-patch DEPENDS "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk")
+  add_dependencies(ssam glbug-patch)
+
+  set_target_properties(ssam PROPERTIES LINK_DEPENDS "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk;${PROJECT_BINARY_DIR}/scratch/pre.js;${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk")
+
+  get_target_property(SSAM_OUTPUT_NAME ssam OUTPUT_NAME)
+  add_custom_command(
+    TARGET ssam
+    POST_BUILD
+    COMMAND /usr/bin/env gawk -i inplace -f "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk" "${PROJECT_BINARY_DIR}/${SSAM_OUTPUT_NAME}.js"
+    DEPENDS "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk"
+    COMMENT "emscripten GL emulation bugfix")
+
+endif()
+
+
 
 # RAKE! Install Section.
 if(DEBUG) # RAKE! Will this work with TFE?
