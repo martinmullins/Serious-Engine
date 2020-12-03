@@ -50,6 +50,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "Registry.h"
 #include "StaticInc.h"
 
+#define RETPTR 1
+#include "emscripten/mainloop.h"
 
 CGame *_pGame = NULL;
 
@@ -471,6 +473,13 @@ void InitializeGame(void)
 static void atexit_sdlquit(void) { static bool firsttime = true; if (firsttime) { firsttime = false; SDL_Quit(); } }
 #endif
 
+DECFNARGS(INIT_1, CTString strCmdLine; );
+DECFNARGS(INIT_2, CTString strCmdLine; );
+DECFN(INIT_3);
+DECFN(INIT_4);
+DECFN(INIT_5);
+DECFN(INITGAMELOOP);
+
 BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
 {
 #ifdef PLATFORM_UNIX
@@ -494,6 +503,15 @@ BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
   _hInstance = hInstance;
   ShowSplashScreen(hInstance);
 
+#ifdef EMSCRIPTEN
+  PUSHARG(INIT_1, CTString, strCmdLine)
+  NEXTFN(INIT_1);
+  return TRUE;
+  BEGINFN(INIT_1);
+  POPARG(INIT_1, CTString, strCmdLine)
+#endif
+
+
   // remember desktop width
   _pixDesktopWidth = DetermineDesktopWidth();
 
@@ -501,11 +519,23 @@ BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
   MainWindow_Init();
   OpenMainWindowInvisible();
 
+#ifdef EMSCRIPTEN
+  PUSHARG(INIT_2, CTString, strCmdLine)
+  NEXTFN(INIT_2);
+  BEGINFN(INIT_2);
+  POPARG(INIT_2, CTString, strCmdLine)
+#endif
+
   // parse command line before initializing engine
   ParseCommandLine(strCmdLine);
 
   // initialize engine
   SE_InitEngine(argv0, sam_strGameName);
+
+#ifdef EMSCRIPTEN
+  NEXTFN(INIT_3);
+  BEGINFN(INIT_3);
+#endif
 
 
   SE_LoadDefaultFonts();
@@ -619,6 +649,11 @@ BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
   LoadLevelsList();
   LoadDemosList();
 
+#ifdef EMSCRIPTEN
+  NEXTFN(INIT_4);
+  BEGINFN(INIT_4);
+#endif
+
   // apply application mode
   StartNewMode( (GfxAPIType)sam_iGfxAPI, sam_iDisplayAdapter, sam_iScreenSizeI, sam_iScreenSizeJ,
                 (enum DisplayDepth)sam_iDisplayDepth, sam_bFullScreenActive);
@@ -628,8 +663,16 @@ BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
     _iDisplayModeChangeFlag = 0;
     sam_bFirstStarted = FALSE;
   }
-  
+
   HideSplashScreen();
+
+#ifdef EMSCRIPTEN
+  NEXTFN(INIT_5);
+  BEGINFN(INIT_5);
+  NEXTFN(INITGAMELOOP);
+#endif
+
+
 
   if (cmd_strPassword!="") {
     _pShell->SetString("net_strConnectPassword", cmd_strPassword);
@@ -677,7 +720,10 @@ BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
   } else {
     StartNextDemo();
   }
+
+#ifndef EMSCRIPTEN
   return TRUE;
+#endif
 }
 
 
@@ -940,387 +986,28 @@ void QuitScreenLoop(void)
   }
 }
 
+DECFN(GAMELOOP)
+DECFN(ENDGAME)
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #include <emscripten/html5.h>
-int InitSubMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-  (void)hPrevInstance;
-  if( !Init( hInstance, nCmdShow, lpCmdLine )) return FALSE;
-
-  // initialy, application is running and active, console and menu are off
-  _bRunning    = TRUE;
-  _bQuitScreen = TRUE;
-  _pGame->gm_csConsoleState  = CS_OFF;
-  _pGame->gm_csComputerState = CS_OFF;
-
-  return 0;
-}
-
-void RunSubMain()
-{
-  CTSTREAM_BEGIN {
-  // while there are any messages in the message queue
-  MSG msg;
-  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-  {
-    // if it is not a mouse message
-    if (!(msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST))
-    {
-      // if not system key messages
-      if (!((msg.message == WM_KEYDOWN && msg.wParam == VK_F10) || msg.message == WM_SYSKEYDOWN))
-      {
-        // dispatch it
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
-    }
-
-    // toggle full-screen on alt-enter
-    if (msg.message == WM_SYSKEYDOWN && msg.wParam == VK_RETURN && !IsIconic(_hwndMain))
-    {
-      // !!! FIXME: SDL doesn't need to rebuild the GL context here to toggle fullscreen.
-      STUBBED("SDL doesn't need to rebuild the GL context here...");
-      StartNewMode((GfxAPIType)sam_iGfxAPI, sam_iDisplayAdapter, sam_iScreenSizeI, sam_iScreenSizeJ,
-                   (enum DisplayDepth)sam_iDisplayDepth, !sam_bFullScreenActive);
-
-      if (_pInput != NULL) // rcg02042003 hack for SDL vs. Win32.
-        _pInput->ClearRelativeMouseMotion();
-    }
-
-    // if application should stop
-    if (msg.message == WM_QUIT || msg.message == WM_CLOSE)
-    {
-      // stop running
-      _bRunning = FALSE;
-      _bQuitScreen = FALSE;
-    }
-
-#ifdef PLATFORM_WIN32
-    // if application is deactivated or minimized
-    if ((msg.message == WM_ACTIVATE && (LOWORD(msg.wParam) == WA_INACTIVE || HIWORD(msg.wParam))) || msg.message == WM_CANCELMODE || msg.message == WM_KILLFOCUS || (msg.message == WM_ACTIVATEAPP && !msg.wParam))
-    {
-      // if application is running and in full screen mode
-      if (!_bWindowChanging && _bRunning)
-      {
-        // minimize if in full screen
-        if (sam_bFullScreenActive)
-          PostMessage(NULL, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-        // just disable input if not in full screen
-        else
-          _pInput->DisableInput();
-      }
-    }
-    // if application is activated or minimized
-    else if ((msg.message == WM_ACTIVATE && (LOWORD(msg.wParam) == WA_ACTIVE || LOWORD(msg.wParam) == WA_CLICKACTIVE)) || msg.message == WM_SETFOCUS || (msg.message == WM_ACTIVATEAPP && msg.wParam))
-    {
-      // enable input back again if needed
-      _bReconsiderInput = TRUE;
-    }
-#endif
-
-    if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE &&
-        (_gmRunningGameMode == GM_DEMO || _gmRunningGameMode == GM_INTRO))
-    {
-      _pGame->StopGame();
-      _gmRunningGameMode = GM_NONE;
-    }
-
-    if (_pGame->gm_csConsoleState == CS_TALK && msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE)
-    {
-      if (_pInput != NULL) // rcg02042003 hack for SDL vs. Win32.
-        _pInput->ClearRelativeMouseMotion();
-      _pGame->gm_csConsoleState = CS_OFF;
-      msg.message = WM_NULL;
-    }
-
-    BOOL bMenuForced = (_gmRunningGameMode == GM_NONE &&
-                        (_pGame->gm_csConsoleState == CS_OFF || _pGame->gm_csConsoleState == CS_TURNINGOFF));
-    BOOL bMenuToggle = (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE && (_pGame->gm_csComputerState == CS_OFF || _pGame->gm_csComputerState == CS_ONINBACKGROUND));
-    if (!bMenuActive)
-    {
-      if (bMenuForced || bMenuToggle)
-      {
-        // if console is active
-        if (_pGame->gm_csConsoleState == CS_ON || _pGame->gm_csConsoleState == CS_TURNINGON)
-        {
-          // deactivate it
-          _pGame->gm_csConsoleState = CS_TURNINGOFF;
-          _iAddonExecState = 0;
-        }
-        // delete key down message so menu would not exit because of it
-        msg.message = WM_NULL;
-        // start menu
-        StartMenus();
-      }
-    }
-    else
-    {
-      if (bMenuForced && bMenuToggle && pgmCurrentMenu->gm_pgmParentMenu == NULL)
-      {
-        // delete key down message so menu would not exit because of it
-        msg.message = WM_NULL;
-      }
-    }
-
-    // if neither menu nor console is running
-    if (!bMenuActive && (_pGame->gm_csConsoleState == CS_OFF || _pGame->gm_csConsoleState == CS_TURNINGOFF))
-    {
-      // if current menu is not root
-      if (!IsMenusInRoot())
-      {
-        // start current menu
-        StartMenus();
-      }
-    }
-
-    if (sam_bMenuSave)
-    {
-      sam_bMenuSave = FALSE;
-      StartMenus("save");
-    }
-    if (sam_bMenuLoad)
-    {
-      sam_bMenuLoad = FALSE;
-      StartMenus("load");
-    }
-    if (sam_bMenuControls)
-    {
-      sam_bMenuControls = FALSE;
-      StartMenus("controls");
-    }
-    if (sam_bMenuHiScore)
-    {
-      sam_bMenuHiScore = FALSE;
-      StartMenus("hiscore");
-    }
-
-    // interpret console key presses
-    if (_iAddonExecState == 0)
-    {
-      if (msg.message == WM_KEYDOWN)
-      {
-        _pGame->ConsoleKeyDown(msg);
-        if (_pGame->gm_csConsoleState != CS_ON)
-        {
-          _pGame->ComputerKeyDown(msg);
-        }
-      }
-      else if (msg.message == WM_KEYUP)
-      {
-        // special handler for talk (not to invoke return key bind)
-        if (msg.wParam == VK_RETURN && _pGame->gm_csConsoleState == CS_TALK)
-        {
-          if (_pInput != NULL) // rcg02042003 hack for SDL vs. Win32.
-            _pInput->ClearRelativeMouseMotion();
-          _pGame->gm_csConsoleState = CS_OFF;
-        }
-      }
-      else if (msg.message == WM_CHAR)
-      {
-        _pGame->ConsoleChar(msg);
-      }
-      if (msg.message == WM_LBUTTONDOWN || msg.message == WM_RBUTTONDOWN || msg.message == WM_LBUTTONDBLCLK || msg.message == WM_RBUTTONDBLCLK || msg.message == WM_LBUTTONUP || msg.message == WM_RBUTTONUP)
-      {
-        if (_pGame->gm_csConsoleState != CS_ON)
-        {
-          _pGame->ComputerKeyDown(msg);
-        }
-      }
-    }
-    // if menu is active and no input on
-    if (bMenuActive && !_pInput->IsInputEnabled())
-    {
-      // pass keyboard/mouse messages to menu
-      if (msg.message == WM_KEYDOWN)
-      {
-        MenuOnKeyDown(msg.wParam);
-      }
-      else if (msg.message == WM_LBUTTONDOWN || msg.message == WM_LBUTTONDBLCLK)
-      {
-        MenuOnKeyDown(VK_LBUTTON);
-      }
-      else if (msg.message == WM_RBUTTONDOWN || msg.message == WM_RBUTTONDBLCLK)
-      {
-        MenuOnKeyDown(VK_RBUTTON);
-      }
-      else if (msg.message == WM_MOUSEMOVE)
-      {
-        MenuOnMouseMove(LOWORD(msg.lParam), HIWORD(msg.lParam));
-#ifndef WM_MOUSEWHEEL
-#define WM_MOUSEWHEEL 0x020A
-#endif
-      }
-      else if (msg.message == WM_MOUSEWHEEL)
-      {
-        SWORD swDir = SWORD(UWORD(HIWORD(msg.wParam)));
-        if (swDir > 0)
-        {
-          MenuOnKeyDown(11);
-        }
-        else if (swDir < 0)
-        {
-          MenuOnKeyDown(10);
-        }
-      }
-      else if (msg.message == WM_CHAR)
-      {
-        MenuOnChar(msg);
-      }
-    }
-
-    // if toggling console
-    BOOL bConsoleKey = sam_bToggleConsole || msg.message == WM_KEYDOWN &&
-    // !!! FIXME: rcg11162001 This sucks.
-    // FIXME: DG: we could use SDL_SCANCODE_GRAVE ?
-#ifdef PLATFORM_UNIX
-                                                 (msg.wParam == SDLK_BACKQUOTE
-#else
-                                                 (MapVirtualKey(msg.wParam, 0) == 41 // scan code for '~'
-#endif
-                                                  || msg.wParam == VK_F1 || (msg.wParam == VK_ESCAPE && _iAddonExecState == 3));
-    if (bConsoleKey && !_bDefiningKey)
-    {
-      sam_bToggleConsole = FALSE;
-      if (_iAddonExecState == 3)
-        _iAddonExecState = 0;
-      // if it is up, or pulling up
-      if (_pGame->gm_csConsoleState == CS_OFF || _pGame->gm_csConsoleState == CS_TURNINGOFF)
-      {
-        // start it moving down and disable menu
-        _pGame->gm_csConsoleState = CS_TURNINGON;
-        // stop all IFeel effects
-        IFeel_StopEffect(NULL);
-        if (bMenuActive)
-        {
-          StopMenus(FALSE);
-        }
-        // if it is down, or dropping down
-      }
-      else if (_pGame->gm_csConsoleState == CS_ON || _pGame->gm_csConsoleState == CS_TURNINGON)
-      {
-        // start it moving up
-        _pGame->gm_csConsoleState = CS_TURNINGOFF;
-      }
-    }
-
-    if (_pShell->GetINDEX("con_bTalk") && _pGame->gm_csConsoleState == CS_OFF)
-    {
-      _pShell->SetINDEX("con_bTalk", FALSE);
-      _pGame->gm_csConsoleState = CS_TALK;
-    }
-
-    // if pause pressed
-    if (msg.message == WM_KEYDOWN && msg.wParam == VK_PAUSE)
-    {
-      // toggle pause
-      _pNetwork->TogglePause();
-    }
-
-#ifdef PLATFORM_WIN32
-    // if command sent from external application
-    if (msg.message == WM_COMMAND)
-    {
-      // if teleport player
-      if (msg.wParam == 1001)
-      {
-        // teleport player
-        TeleportPlayer(msg.lParam);
-        // restore
-        PostMessage(NULL, WM_SYSCOMMAND, SC_RESTORE, 0);
-      }
-    }
-#endif
-
-    // if demo is playing
-    if (_gmRunningGameMode == GM_DEMO ||
-        _gmRunningGameMode == GM_INTRO)
-    {
-      // check if escape is pressed
-      BOOL bEscape = (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE);
-      // check if console-invoke key is pressed
-      BOOL bTilde = (msg.message == WM_KEYDOWN &&
-                     (msg.wParam == VK_F1 ||
-// !!! FIXME: ugly.
-#ifdef PLATFORM_UNIX
-                      msg.wParam == SDLK_BACKQUOTE
-#else
-                      MapVirtualKey(msg.wParam, 0) == 41                             // scan code for '~'
-#endif
-                      ));
-      // check if any key is pressed
-      BOOL bAnyKey = ((msg.message == WM_KEYDOWN && (msg.wParam == VK_SPACE || msg.wParam == VK_RETURN)) ||
-                      msg.message == WM_LBUTTONDOWN || msg.message == WM_RBUTTONDOWN);
-
-      // if escape is pressed
-      if (bEscape)
-      {
-        // stop demo
-        _pGame->StopGame();
-        _bInAutoPlayLoop = FALSE;
-        _gmRunningGameMode = GM_NONE;
-        // if any other key is pressed except console invoking
-      }
-      else if (bAnyKey && !bTilde)
-      {
-        // if not in menu or in console
-        if (!bMenuActive && !bMenuRendering && _pGame->gm_csConsoleState == CS_OFF)
-        {
-          // skip to next demo
-          _pGame->StopGame();
-          _gmRunningGameMode = GM_NONE;
-          StartNextDemo();
-        }
-      }
-    }
-
-  } // loop while there are messages
-
-  // when all messages are removed, window has surely changed
-  _bWindowChanging = FALSE;
-
-  // get real cursor position
-  if (_pGame->gm_csComputerState != CS_OFF && _pGame->gm_csComputerState != CS_ONINBACKGROUND)
-  {
-    POINT pt;
-    ::GetCursorPos(&pt);
-    ::ScreenToClient(_hwndMain, &pt);
-    _pGame->ComputerMouseMove(pt.x, pt.y);
+void mainloop() {
+  if (!_bRunning) {
+    CPrintF("--- GAME HAS FINISHED\n");
+    emscripten_cancel_main_loop();
+    ENDGAME();
+    return;
   }
 
-  // if addon is to be executed
-  if (_iAddonExecState == 1)
-  {
-    // print header and start console
-    CPrintF(TRANSV("---- Executing addon: '%s'\n"), (const char *)_fnmAddonToExec);
-    sam_bToggleConsole = TRUE;
-    _iAddonExecState = 2;
-    // if addon is ready for execution
+  if (retfn) {
+    CTSTREAM_BEGIN {
+      retfn();
+    } CTSTREAM_END;
+  } else {
+    CPrintF("--- NO NEXTFN\n");
+    emscripten_cancel_main_loop();
   }
-  else if (_iAddonExecState == 2 && _pGame->gm_csConsoleState == CS_ON)
-  {
-    // execute it
-    CTString strCmd;
-    strCmd.PrintF("include \"%s\"", (const char *)_fnmAddonToExec);
-    _pShell->Execute(strCmd);
-    CPrintF(TRANSV("Addon done, press Escape to close console\n"));
-    _iAddonExecState = 3;
-  }
-
-  // automaticaly manage input enable/disable toggling
-  UpdateInputEnabledState();
-  // automaticaly manage pause toggling
-  UpdatePauseState();
-  // notify game whether menu is active
-  _pGame->gm_bMenuOn = bMenuActive;
-
-  // do the main game loop and render screen
-  DoGame();
-
-  // limit current frame rate if neeeded
-  LimitFrameRate();
-
-  } CTSTREAM_END;
 }
 #endif
 
@@ -1330,16 +1017,29 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
 
   if( !Init( hInstance, nCmdShow, lpCmdLine )) return FALSE;
 
+#ifdef EMSCRIPTEN
+  return TRUE;
+  BEGINFN(INITGAMELOOP)
+  NEXTFN(GAMELOOP)
+#endif
+
   // initialy, application is running and active, console and menu are off
   _bRunning    = TRUE;
   _bQuitScreen = TRUE;
   _pGame->gm_csConsoleState  = CS_OFF;
   _pGame->gm_csComputerState = CS_OFF;
+
 //  bMenuActive    = FALSE;
 //  bMenuRendering = FALSE;
   // while it is still running
+#ifndef EMSCRIPTEN
   while( _bRunning && _fnmModToLoad=="")
   {
+#else
+  BEGINFN(GAMELOOP)
+  {
+#endif
+
     // while there are any messages in the message queue
     MSG msg;
     while( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE)) {
@@ -1708,6 +1408,8 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
 
   } // end of main application loop
 
+  NEXTFN(GAMELOOP)
+  BEGINFN(ENDGAME)
   _pInput->DisableInput();
   _pGame->StopGame();
   
@@ -1715,7 +1417,9 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
   if( _bQuitScreen && _fnmModToLoad=="") QuitScreenLoop();
   
   End();
+#ifndef EMSCRIPTEN
   return TRUE;
+#endif
 }
 
 void CheckModReload(void)
@@ -1789,17 +1493,9 @@ int CommonMainline( HINSTANCE hInstance, HINSTANCE hPrevInstance,
     CheckBrowser();
   #else
     CTSTREAM_BEGIN {
-    CPrintF("$$$$$$$$$$$$$$ INIT SUB MAIN %d \n", 0);
-    iResult = InitSubMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-    //if (!iResult) {
-    //  CPrintF("$$$$$$$$$$$$$$$$4 FAILED %d\n", iResult);
-    //  return iResult;
-    //}
-
-    CPrintF("$$$$$$$$$$$$$$ Setup RunSubMain%d\n", 0);
-    emscripten_set_main_loop(RunSubMain, 0, 1);
+      iResult = SubMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+      emscripten_set_main_loop(mainloop, 0, 1);
     } CTSTREAM_END;
-
   #endif
 
   return iResult;

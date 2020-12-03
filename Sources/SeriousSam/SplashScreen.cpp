@@ -138,6 +138,13 @@ void HideSplashScreen(void)
 
 void ShowSplashScreen(HINSTANCE hInstance)
 {
+#ifdef EMSCRIPTEN
+  // The splash screen will work, but I think emscripten only has one canvas.
+  //   the main window is created `invisibly` at the same time.
+  //   I dont think two SDL windows are supported.
+  return;
+#endif
+
   SDL_Surface *bmp = SDL_LoadBMP("splash.bmp");
   if (!bmp) {
     return;
