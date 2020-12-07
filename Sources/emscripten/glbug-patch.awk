@@ -32,11 +32,9 @@ BEGIN {
   print "      GLctx.bindBuffer(0x8893 /*GL_ELEMENT_ARRAY_BUFFER*/, null);";
   print "    }";
   print "  }";
-  ORS = "";
-  $1="";
-  print "function _emscripten_glDrawElementsOrig(";
   OFS = "(";
-  print "ASDFASDFASDF";
+  ORS = "";
+  $1="function _emscripten_glDrawElementsOrig";
   print $0;
   print RT; 
   next;
@@ -45,10 +43,4 @@ BEGIN {
 {
   print $0
   print RT;
-}
-
-END {
-  # Hacky
-  ORS="\n"
-  print "() { };"
 }

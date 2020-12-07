@@ -43,6 +43,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <Engine/Templates/Stock_CTextureData.h>
 #include <Engine/Templates/Stock_CModelData.h>
 
+#include "emscripten/mainloop.h"
+
 // default size of page used for stream IO operations (4Kb)
 ULONG _ulPageSize = 0;
 // maximum length of file that can be saved (default: 128Mb)
@@ -785,9 +787,14 @@ void CTStream::DictionaryReadEnd_t(void)
 }
 void CTStream::DictionaryPreload_t(void)
 {
-  INDEX ctFileNames = strm_afnmDictionary.Count();
+  emArg INDEX ctFileNames;
+  emArg INDEX iFileName;
+  emBegin
+  ctFileNames = strm_afnmDictionary.Count();
+  iFileName=0;
   // for each filename
-  for(INDEX iFileName=0; iFileName<ctFileNames; iFileName++) {
+  emReturn
+  for(; iFileName<ctFileNames; ) {
     // preload it
     CTFileName &fnm = strm_afnmDictionary[iFileName];
     CTString strExt = fnm.FileExt();
@@ -801,7 +808,13 @@ void CTStream::DictionaryPreload_t(void)
     } catch (char *strError) {
       CPrintF( TRANS("Cannot preload %s: %s\n"), (const char *) (CTString&)fnm, strError);
     }
+
+    iFileName++;
+    if (iFileName % 3 == 0) {
+      emQuit
+    }
   }
+  emFinish
 }
 
 /////////////////////////////////////////////////////////////////////////////

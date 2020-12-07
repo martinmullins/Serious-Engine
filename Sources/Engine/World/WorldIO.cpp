@@ -30,6 +30,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <Engine/Templates/StaticArray.cpp>
 #include <Engine/Terrain/Terrain.h>
 
+#include <Engine/Base/Console.h>
+#include "emscripten/mainloop.h"
+
 #define WORLDSTATEVERSION_NOCLASSCONTAINER 9
 #define WORLDSTATEVERSION_MULTITEXTURING 8
 #define WORLDSTATEVERSION_SHADOWSPERMIP 7
@@ -66,18 +69,24 @@ void CWorld::Load_t(const CTFileName &fnmWorld) // throw char *
   // remember the file
   wo_fnmFileName = fnmWorld;
   // open the file
-  CTFileStream strmFile;
+  emBegin
+  emArg CTFileStream strmFile;
   strmFile.Open_t(fnmWorld);
 
   // check engine build allowing reinit
-  BOOL bNeedsReinit;
+  emArg BOOL bNeedsReinit;
   _pNetwork->CheckVersion_t(strmFile, TRUE, bNeedsReinit);
 
+  emReturn
   // read the world from the file
   Read_t(&strmFile);
 
+  emReturn
   // close the file
   strmFile.Close();
+
+  emReturn
+
 
   // if reinit is needed
   if (bNeedsReinit) {
@@ -92,6 +101,7 @@ void CWorld::Load_t(const CTFileName &fnmWorld) // throw char *
     Save_t(fnmWorld);
     CallProgressHook_t(1.0f);
   }
+  emFinish
 }
 
 /*
@@ -126,11 +136,13 @@ void CWorld::Write_t(CTStream *postrm) // throw char *
  */
 void CWorld::Read_t(CTStream *pistrm) // throw char *
 {
+  // need high FPU precision
+  CSetFPUPrecision FPUPrecision(FPT_53BIT);
+
+  emBegin
   _pfWorldEditingProfile.IncrementAveragingCounter();
   _bFileReplacingApplied = FALSE;
 
-  // need high FPU precision
-  CSetFPUPrecision FPUPrecision(FPT_53BIT);
 
   // clear eventual old data in the world
   Clear();
@@ -139,14 +151,20 @@ void CWorld::Read_t(CTStream *pistrm) // throw char *
   LockAll();
 
   pistrm->ExpectID_t("WRLD"); // 'world'
+  emReturn
+
   // read the world brushes from the file
   ReadBrushes_t(pistrm);
+  emReturn
   // read current world state from the file
   ReadState_t(pistrm);
+  emReturn
   pistrm->ExpectID_t("WEND"); // 'world end'
+  emReturn
 
   // unlock all arrays and containers
   UnlockAll();
+  emFinish
 
   if( _bFileReplacingApplied)
     WarningMessage("Some of files needed to load world have been replaced while loading");
@@ -178,36 +196,45 @@ void CWorld::LoadBrushes_t(const CTFileName &fnmWorld) // throw char *
  */
 void CWorld::ReadBrushes_t( CTStream *istrm)// throw char *
 {
-  _pfWorldEditingProfile.StartTimer(CWorldEditingProfile::PTI_READBRUSHES);
 
   // must be in 53bit mode when managing brushes
   CSetFPUPrecision FPUPrecision(FPT_53BIT);
   
+  emBegin
+  _pfWorldEditingProfile.StartTimer(CWorldEditingProfile::PTI_READBRUSHES);
+
   ReadInfo_t(istrm, FALSE);
 
   SetProgressDescription(TRANS("loading world textures"));
   CallProgressHook_t(0.0f);
+  emReturn
   // read the brushes from the file
   _pwoCurrentLoading = this;
   istrm->DictionaryReadBegin_t();
   istrm->DictionaryPreload_t();
   CallProgressHook_t(1.0f);
+  emReturn
   SetProgressDescription(TRANS("loading brushes"));
   CallProgressHook_t(0.0f);
+  emReturn
   wo_baBrushes.Read_t(istrm);
   CallProgressHook_t(1.0f);
+  emReturn
 
   // if there are some terrais in world
   if(istrm->PeekID_t()==CChunkID("TRAR")) { // 'terrain archive'
     SetProgressDescription(TRANS("loading terrains"));
     CallProgressHook_t(0.0f);
+    emReturn
     wo_taTerrains.Read_t(istrm);
     CallProgressHook_t(1.0f);
+    emReturn
   }
 
   istrm->DictionaryReadEnd_t();
   _pwoCurrentLoading = NULL;
   _pfWorldEditingProfile.StopTimer(CWorldEditingProfile::PTI_READBRUSHES);
+  emFinish
 }
 
 /*
@@ -229,23 +256,27 @@ void CWorld::WriteBrushes_t( CTStream *ostrm) // throw char *
  */
 void CWorld::ReadState_t( CTStream *istr) // throw char *
 {
-  _pfWorldEditingProfile.StartTimer(CWorldEditingProfile::PTI_READSTATE);
   // must be in 24bit mode when managing entities
   CSetFPUPrecision FPUPrecision(FPT_24BIT);
-
   CTmpPrecachingNow tpn;
+  // read the version number
+  emArg INDEX iSavedVersion;
+
+  emBegin
+  _pfWorldEditingProfile.StartTimer(CWorldEditingProfile::PTI_READSTATE);
   _bReadEntitiesByID = FALSE;
 
   SetProgressDescription(TRANS("loading models"));
   CallProgressHook_t(0.0f);
   wo_slStateDictionaryOffset = istr->DictionaryReadBegin_t();
+  emReturn
   istr->DictionaryPreload_t();
+  emReturn
   CallProgressHook_t(1.0f);
   istr->ExpectID_t("WSTA"); // world state
-
-  // read the version number
-  INDEX iSavedVersion;
+  emReturn
   (*istr)>>iSavedVersion;
+  emReturn
   // if the version number is the newest
   if(iSavedVersion==WORLDSTATEVERSION_CURRENT) {
     // read current version
@@ -281,16 +312,19 @@ void CWorld::ReadState_t( CTStream *istr) // throw char *
     }
   }
   istr->DictionaryReadEnd_t();
+  emReturn
 
   SetProgressDescription(TRANS("precaching"));
   CallProgressHook_t(0.0f);
+  emReturn
   // precache data needed by entities
   if( gam_iPrecachePolicy==PRECACHE_SMART) {
     PrecacheEntities_t();
   }
+  emReturn
   CallProgressHook_t(1.0f);
-
   _pfWorldEditingProfile.StopTimer(CWorldEditingProfile::PTI_READSTATE);
+  emFinish
 }
 
 /*
@@ -545,6 +579,10 @@ void CWorld::ReadState_old_t( CTStream *istr) // throw char *
  */
 void CWorld::ReadState_new_t( CTStream *istr) // throw char *
 {
+  emArg INDEX ctEntities;
+  emArg INDEX iEntity;
+  emArg INDEX ienBackgroundViewer;
+  emBegin
   // read the world info
   ReadInfo_t(istr, TRUE);
 
@@ -559,7 +597,7 @@ void CWorld::ReadState_new_t( CTStream *istr) // throw char *
     wo_ulNextEntityID = 1;
   }
 
-  INDEX ienBackgroundViewer = -1;
+  ienBackgroundViewer = -1;
   // read background viewer entity index
   istr->ExpectID_t("BGVW"); // background viewer
   (*istr)>>ienBackgroundViewer;
@@ -598,13 +636,14 @@ void CWorld::ReadState_new_t( CTStream *istr) // throw char *
     _bReadEntitiesByID = TRUE;
   }
   // read number of entities
-  INDEX ctEntities;
   (*istr)>>ctEntities;
 
   SetProgressDescription(TRANS("creating entities"));
   CallProgressHook_t(0.0f);
+  iEntity = 0;
+  emReturn
   // for each entity
-  {for(INDEX iEntity=0; iEntity<ctEntities; iEntity++) {
+  {for(; iEntity<ctEntities;) {
     // read entity id if needed
     ULONG ulID = 0;
     if (_bReadEntitiesByID) {
@@ -622,18 +661,36 @@ void CWorld::ReadState_new_t( CTStream *istr) // throw char *
       penNew->en_ulID = ulID;
     }
     CallProgressHook_t(FLOAT(iEntity)/ctEntities);
+
+    iEntity++;
+    if (iEntity % 100 == 0) {
+      emQuit;
+    }
   }}
+
   CallProgressHook_t(1.0f);
+  iEntity = 0;
+  emReturn
 
   SetProgressDescription(TRANS("loading entities"));
   CallProgressHook_t(0.0f);
+
+  emReturn
   // for each entity
-  {for(INDEX iEntity=0; iEntity<ctEntities; iEntity++) {
+  {for(; iEntity<ctEntities;) {
     // deserialize entity from stream
     wo_cenAllEntities[iEntity].Read_t(istr);
     CallProgressHook_t(FLOAT(iEntity)/ctEntities);
+
+    iEntity++;
+    if (iEntity % 100 == 0) {
+      emQuit;
+    }
   }}
+
   CallProgressHook_t(1.0f);
+  iEntity = 0;
+  emReturn
 
   // after all entities have been read, set the background viewer entity
   if (ienBackgroundViewer==-1) {
@@ -647,6 +704,7 @@ void CWorld::ReadState_new_t( CTStream *istr) // throw char *
     }
     SetBackgroundViewer(penBcg);
   }
+
 
   wo_cenEntities.Unlock();
   // for each entity
@@ -678,13 +736,16 @@ void CWorld::ReadState_new_t( CTStream *istr) // throw char *
 
   // some shadow layers might not have light sources, remove such to prevent crashes
   wo_baBrushes.RemoveDummyLayers();
+  emReturn
 
   SetProgressDescription(TRANS("preparing world"));
   CallProgressHook_t(0.0f);
+  emReturn
   // after all entities have been read and brushes are connected to entities,
   // calculate bounding boxes of all brushes
   wo_baBrushes.CalculateBoundingBoxes();
   CallProgressHook_t(0.3f);
+  emReturn
   // after all bounding boxes and BSP trees are created,
   // create links between portals and sectors on their other side if needed
   if (!_bPortalSectorLinksPreLoaded) {
@@ -694,10 +755,12 @@ void CWorld::ReadState_new_t( CTStream *istr) // throw char *
   // create links between sectors and non-zoning entities in sectors
   wo_baBrushes.ReadEntitySectorLinks_t(*istr);
   CallProgressHook_t(0.6f);
+  emReturn
   LinkEntitiesToSectors();
   CallProgressHook_t(1.0f);
   _bPortalSectorLinksPreLoaded = FALSE;
   _bEntitySectorLinksPreLoaded = FALSE;
+  emFinish
 }
 
 /*

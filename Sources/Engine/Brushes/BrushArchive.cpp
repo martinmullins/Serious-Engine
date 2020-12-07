@@ -30,6 +30,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <Engine/Templates/DynamicArray.cpp>
 #include <Engine/Templates/StaticArray.cpp>
 
+#include "emscripten/mainloop.h"
+
 // !!! FIXME: This confuses GCC, since CDynamicArray is a #included
 // !!! FIXME:  source file, and it ends up compiling the template more than
 // !!! FIXME:  once.  :(   --ryan.
@@ -464,26 +466,44 @@ void CBrushArchive::WriteEntitySectorLinks_t( CTStream &strm) // throw char *
  */
 void CBrushArchive::Read_t( CTStream *istrFile) // throw char *
 {
+  emArg INDEX ctBrushes;
+  emArg CBrush3D *abrBrushes;
+  emArg INDEX iBrush;
+  emBegin
+  iBrush = 0;
+  ctBrushes = 0;
   istrFile->ExpectID_t("BRAR");   // brush archive
 
-  INDEX ctBrushes;
   // read number of brushes
   (*istrFile)>>ctBrushes;
 
   // if there are some brushes
   if (ctBrushes!=0) {
     // create that much brushes
-    CBrush3D *abrBrushes = ba_abrBrushes.New(ctBrushes);
+    abrBrushes = ba_abrBrushes.New(ctBrushes);
+  }
+
+  emReturn
+
+  if (ctBrushes != 0) {
     // for each of the new brushes
-    for (INDEX iBrush=0; iBrush<ctBrushes; iBrush++) {
+    for (; iBrush<ctBrushes;) {
       // read it from stream
       CallProgressHook_t(FLOAT(iBrush)/ctBrushes);
       abrBrushes[iBrush].Read_t(istrFile);
+      iBrush++;
+      if (iBrush % 20 == 0) {
+        emQuit
+      }
     }
   }
 
+  emReturn
+
   // read links if possible
   ReadPortalSectorLinks_t(*istrFile);
+
+  emFinish
 
   istrFile->ExpectID_t("EOAR");   // end of archive
 }

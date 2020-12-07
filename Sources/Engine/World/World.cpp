@@ -42,6 +42,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include <Engine/Templates/Stock_CEntityClass.h>
 
+#include "emscripten/mainloop.h"
+
 template class CDynamicContainer<CEntity>;
 template class CSelection<CBrushPolygon, BPOF_SELECTED>;
 template class CSelection<CBrushSector, BSCF_SELECTED>;
@@ -776,14 +778,22 @@ void CWorld::ReinitializeEntities(void)
 void CWorld::PrecacheEntities_t(void)
 {
   // for each entity in the world
-  INDEX ctEntities = wo_cenEntities.Count();
-  INDEX iEntity = 0;
-  FOREACHINDYNAMICCONTAINER(wo_cenEntities, CEntity, iten) {
+  emArg INDEX ctEntities;
+  emArg INDEX iEntity;
+  emBegin
+  ctEntities = wo_cenEntities.Count();
+  iEntity = 0;
+  emReturn
+  for( ; iEntity < ctEntities; ) {
     // precache
     CallProgressHook_t(FLOAT(iEntity)/ctEntities);
-    iten->Precache();
+    wo_cenEntities[iEntity].Precache();
     iEntity++;
+    if (iEntity % 100 == 0) {
+      emQuit
+    }
   }
+  emFinish
 }
 // delete all entities that don't fit given spawn flags
 void CWorld::FilterEntitiesBySpawnFlags(ULONG ulFlags)

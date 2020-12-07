@@ -73,6 +73,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include <Engine/GameAgent/GameAgent.h>
 
+#include "emscripten/mainloop.h"
+
 
 // pointer to global instance of the only game object in the application
 CNetworkLibrary *_pNetwork= NULL;
@@ -984,6 +986,13 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
   INDEX ctMaxPlayers, BOOL bWaitAllPlayers,
   void *pvSessionProperties) // throw char *
 {
+  CGatherCRC gc;
+  // access to the list of handlers must be locked
+  CTSingleLock slHooks(&_pTimer->tm_csHooks, TRUE);
+  // synchronize access to network
+  CTSingleLock slNetwork(&ga_csNetwork, TRUE);
+
+  emBegin
   // mute all sounds
   _pSound->Mute();
 
@@ -994,7 +1003,9 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
   CPrintF( TRANS("  max players: %d\n"), ctMaxPlayers);
   CPrintF( TRANS("  waiting: %d\n"), bWaitAllPlayers);
 
-  CGatherCRC gc;
+
+  emReturn
+
 
   // if starting in network
   if (_cmiComm.IsNetworkEnabled()) {
@@ -1008,10 +1019,6 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
     CPrintF( TRANS("  network is off\n"));
   }
 
-  // access to the list of handlers must be locked
-  CTSingleLock slHooks(&_pTimer->tm_csHooks, TRUE);
-  // synchronize access to network
-  CTSingleLock slNetwork(&ga_csNetwork, TRUE);
   ga_ctTimersPending = -1;    // disable timer pending
 
   ga_strSessionName = strSessionName;
@@ -1023,6 +1030,7 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
 
   memcpy(ga_aubProperties, pvSessionProperties, NET_MAXSESSIONPROPERTIES);
 
+  emReturn
   // remember the world filename
   ga_fnmWorld = fnmWorld;
   ga_fnmNextLevel = CTString("");
@@ -1041,8 +1049,11 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
   // remember the world pointer
   _pShell->SetCurrentWorld(&ga_World);
 
+  emReturn
   SetProgressDescription(TRANS("starting server"));
   CallProgressHook_t(0.0f);
+
+  emReturn
   // initialize server
   try {
     ga_srvServer.Start_t();
@@ -1058,8 +1069,12 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
   // start the timer loop
   AddTimerHandler();
 
+  emReturn
+
   SetProgressDescription(TRANS("starting session"));
   CallProgressHook_t(0.0f);
+
+  emReturn
   // initialize session state
   try {
     ga_sesSessionState.Start_t(-1);
@@ -1072,6 +1087,8 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
     throw;
   }
   CallProgressHook_t(1.0f);
+
+  emReturn
 
   // remember maximum number of players
   ga_sesSessionState.ses_ctMaxPlayers = ctMaxPlayers;
@@ -1091,6 +1108,8 @@ void CNetworkLibrary::StartPeerToPeer_t(const CTString &strSessionName,
   ga_ctTimersPending = 0;
   FinishCRCGather();
   CPrintF( TRANS("  started.\n"));
+
+  emFinish
 }
 
 /*

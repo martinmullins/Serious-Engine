@@ -1019,6 +1019,7 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
 
 #ifdef EMSCRIPTEN
   return TRUE;
+  NEXTFN(GAMELOOP)
   BEGINFN(INITGAMELOOP)
   NEXTFN(GAMELOOP)
 #endif
@@ -1037,6 +1038,7 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
   {
 #else
   BEGINFN(GAMELOOP)
+  NEXTFN(GAMELOOP)
   {
 #endif
 
@@ -1408,7 +1410,6 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
 
   } // end of main application loop
 
-  NEXTFN(GAMELOOP)
   BEGINFN(ENDGAME)
   _pInput->DisableInput();
   _pGame->StopGame();

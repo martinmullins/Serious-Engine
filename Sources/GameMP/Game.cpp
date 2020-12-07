@@ -37,6 +37,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "Registry.h"
 #endif
 
+#include "emscripten/mainloop.h"
+
 FLOAT con_fHeightFactor = 0.5f;
 FLOAT con_tmLastLines   = 5.0f;
 INDEX con_bTalk = 0;
@@ -1147,21 +1149,26 @@ void CGame::EndInternal(void)
 BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld,
    CSessionProperties &sp)
 {
+  CEnableUserBreak eub;
+  emBegin
   gam_iObserverConfig = 0;
   gam_iObserverOffset = 0;
   // stop eventually running game
   StopGame();
 
-  CEnableUserBreak eub;
+  emReturn
   if (!gm_bFirstLoading) {
     _bUserBreakEnabled = FALSE;
   }
 
   // try to start current network provider
   if( !StartProviderFromName()) {
+    emDone
     return FALSE;
     gm_bFirstLoading = FALSE;
   }
+
+  emReturn
 
   // clear profile array and start game
   _atmFrameTimes.Clear();
@@ -1190,8 +1197,11 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld,
     _pNetwork->StopProvider();
     // and display error
     CPrintF(TRANSV("Cannot start game:\n%s\n"), strError);
+    emDone
     return FALSE;
   }
+
+  emReturn
 
   // setup players from given indices
   SetupLocalPlayers();
@@ -1200,6 +1210,7 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld,
     _pNetwork->StopGame();
     _pNetwork->StopProvider();
     gm_bFirstLoading = FALSE;
+    emDone
     return FALSE;
   }
   gm_bFirstLoading = FALSE;
@@ -1209,6 +1220,7 @@ BOOL CGame::NewGame(const CTString &strSessionName, const CTFileName &fnWorld,
   gm_iLastSetHighScore = -1;
 
   MaybeDiscardLastLines();
+  emFinish
   return TRUE;
 }
 

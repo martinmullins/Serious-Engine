@@ -17,6 +17,8 @@
 #include "LevelInfo.h"
 #include "VarList.h"
 
+#include "emscripten/mainloop.h"
+
 // macros for translating radio button text arrays
 #define RADIOTRANS(str) ("ETRS" str)
 #define TRANSLATERADIOARRAY(array) TranslateRadioTexts(array, ARRAYCOUNT(array))
@@ -973,6 +975,11 @@ void StartSinglePlayerNewMenu(void)
   ChangeToMenu( &gmSinglePlayerNewMenu);
 }
 
+#ifdef EMSCRIPTEN
+DECFNARGS(STARTSINGLEGAME, CUniversalSessionProperties sp; )
+DECFNEX(GAMELOOP)
+#endif
+
 void StartSinglePlayerGame(void)
 {
 /*  if (!IsCDInDrive()) {
@@ -992,6 +999,15 @@ void StartSinglePlayerGame(void)
   CUniversalSessionProperties sp;
   _pGame->SetSinglePlayerSession(sp);
 
+  CPrintF("START SINGLE PLAYER GAME\n");
+#ifdef EMSCRIPTEN
+  PUSHARG(STARTSINGLEGAME, CUniversalSessionProperties, sp)
+  NEXTFN(STARTSINGLEGAME)
+  BEGINFN(STARTSINGLEGAME)
+  NEXTFN(STARTSINGLEGAME)
+  POPARG(STARTSINGLEGAME, CUniversalSessionProperties, sp)
+#endif
+
   if (_pGame->NewGame( _pGame->gam_strCustomLevel, _pGame->gam_strCustomLevel, sp))
   {
     StopMenus();
@@ -999,6 +1015,10 @@ void StartSinglePlayerGame(void)
   } else {
     _gmRunningGameMode = GM_NONE;
   }
+
+#ifdef EMSCRIPTEN
+  NEXTFN(GAMELOOP)
+#endif
 }
 
 void StartSinglePlayerGame_Tourist(void)
