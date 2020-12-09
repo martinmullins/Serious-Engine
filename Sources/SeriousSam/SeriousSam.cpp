@@ -199,6 +199,17 @@ static void QuitGame(void)
   _bQuitScreen = FALSE;
 }
 
+#ifdef EMSCRIPTEN
+void updateScreenSize() {
+  sam_iScreenSizeI = EM_ASM_INT({
+    return document.body.clientWidth;
+  });
+  sam_iScreenSizeJ = EM_ASM_INT({
+    return document.body.clientHeight;
+  });
+}
+#endif
+
 // check if another app is already running
 // !!! FIXME: rcg01042002 Actually, I've abstracted this code, but it didn't
 // !!! FIXME: rcg01042002  really seem to care if there was another copy
@@ -600,6 +611,10 @@ BOOL Init( HINSTANCE hInstance, int nCmdShow, CTString strCmdLine)
   InitializeGame();
   _pNetwork->md_strGameID = sam_strGameName;
 
+#ifdef EMSCRIPTEN
+  updateScreenSize();
+#endif
+
   _pGame->LCDInit();
 
   if( sam_bFirstStarted) {
@@ -905,6 +920,7 @@ void TeleportPlayer(int iPosition)
   strCommand.PrintF( "cht_iGoToMarker = %d;", iPosition);
   _pShell->Execute(strCommand);
 }
+
 
 
 CTextureObject _toStarField;
@@ -1592,38 +1608,14 @@ static inline void warn_profiling(void)
 
 int main(int argc, char **argv)
 {
-  DIR *d;
-  struct dirent *dir;
-  d = opendir("/Levels");
-  if (d)
-  {
-      while ((dir = readdir(d)) != NULL)
-      {
-          printf("%s\n", dir->d_name);
-      }
-      closedir(d);
-  }
-
   #ifdef EMSCRIPTEN
-  //setenv("LIBGL_ES", "2", 1);
-  //setenv("LIBGL_GL", "15", 1);
-  //setenv("LIBGL_USEVBO", "3", 1);
-  ////setenv("LIBGL_FORCE16BITS", "1", 1);
-  ////setenv("LIBGL_NOVAOCACHE", "1", 1);
-  //setenv("LIBGL_SILENTSTUB", "0", 1);
-  //setenv("LIBGL_LOGSHADERERROR", "1", 1);
-  ////setenv("LIBGL_ALPHAHACK", "1", 1);
-  //setenv("LIBGL_NODEPTHTEX", "1", 1);
-  //setenv("LIBGL_NOERROR", "1", 1);
-
+  updateScreenSize();
   #endif
+
   #ifdef STATICALLY_LINKED
   static_setup();
   #endif
 
-  CPrintF("Hello Main");
-  Registry::dump();
-  CPrintF("-- DONE DONE DONE --");
   #ifdef BETAEXPIRE
     // !!! FIXME: This is Unix-centric (at least, non-win32) if put in main().
     check_beta();
