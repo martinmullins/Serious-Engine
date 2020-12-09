@@ -98,7 +98,7 @@ static TIME _tmDisplayModeChanged = 100.0f; // when display mode was last change
 // rendering preferences for automatic settings
 INDEX sam_iVideoSetup = 1;  // 0==speed, 1==normal, 2==quality, 3==custom
 // automatic adjustment of audio quality
-BOOL sam_bAutoAdjustAudio = TRUE;
+BOOL sam_bAutoAdjustAudio = FALSE;
 
 INDEX sam_bAutoPlayDemos = TRUE;
 static INDEX _bInAutoPlayLoop = TRUE;
@@ -1406,7 +1406,9 @@ int SubMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int 
     DoGame();
 
     // limit current frame rate if neeeded
+#ifndef EMSCRIPTEN
     LimitFrameRate();
+#endif
 
   } // end of main application loop
 
