@@ -1169,24 +1169,24 @@ static void EMSCRIPTEN_KEEPALIVE ogl_DrawElements( INDEX ctElem, INDEX_T *pidx)
   else {
     if (pidx ) {
       pglDrawElements( GL_TRIANGLES, ctElem, INDEX_GL, pidx);
-      GLenum rc;
-      if((rc = pglGetError()) != GL_NO_ERROR) {
-        //printf("glDrawElements() failed\n");
-        //printf("  GFX_ctVertices: %d\n", GFX_ctVertices);
-        //printf("  ctElem: %d\n", ctElem);
-        //printf("   sindices: [ ");
-        //for( INDEX i=0; i< ctElem; i++) {
-        //  if (pidx[i] >= GFX_ctVertices) {
-        //    printf("<!!>");
-        //  }
-        //  printf("%hu, ", pidx[i]);
-        //}
-        //printf("]\n");
-        //fflush(stdout);
-        //CPrintF("!!! glDrawElements ERROR %d %d != 0, errno=%d, count=%d\n",  (unsigned int)pidx, sizeof(INDEX_T),  rc, ctElem);
-        fflush(stdout);
-        //abort();
-      }
+      //GLenum rc;
+      //if((rc = pglGetError()) != GL_NO_ERROR) {
+      //  //printf("glDrawElements() failed\n");
+      //  //printf("  GFX_ctVertices: %d\n", GFX_ctVertices);
+      //  //printf("  ctElem: %d\n", ctElem);
+      //  //printf("   sindices: [ ");
+      //  //for( INDEX i=0; i< ctElem; i++) {
+      //  //  if (pidx[i] >= GFX_ctVertices) {
+      //  //    printf("<!!>");
+      //  //  }
+      //  //  printf("%hu, ", pidx[i]);
+      //  //}
+      //  //printf("]\n");
+      //  //fflush(stdout);
+      //  //CPrintF("!!! glDrawElements ERROR %d %d != 0, errno=%d, count=%d\n",  (unsigned int)pidx, sizeof(INDEX_T),  rc, ctElem);
+      //  fflush(stdout);
+      //  abort();
+      //}
     }
   }
 
