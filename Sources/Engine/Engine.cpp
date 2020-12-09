@@ -216,8 +216,8 @@ static void DetectCPU(void)
   sys_bCPUHasCMOV = bCMOV!=0;
 #ifdef PLATFORM_PANDORA
   sys_iCPUMHz = 400;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
-#elif defined(EMSCRIPTEN)
-  sys_iCPUMHz = 200;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
+//#elif defined(EMSCRIPTEN)
+//  sys_iCPUMHz = 200;    // conservative, ARM -> x86 cpu translation is not 1 to 1.
 #elif defined(PLATFORM_PYRA)
   sys_iCPUMHz = 1000;
 #else
