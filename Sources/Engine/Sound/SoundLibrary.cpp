@@ -230,6 +230,10 @@ static BOOL StartUp_SDLaudio( CSoundLibrary &sl, BOOL bReport=TRUE)
     CPrintF(TRANSV("Unsupported bits-per-sample: %d\n"), bps);
     return FALSE;
   }
+#ifdef EMSCRIPTEN
+  desired.format =  AUDIO_S16LSB;
+  sl.sl_SwfeFormat.wBitsPerSample = 16;
+#endif
   desired.freq = sl.sl_SwfeFormat.nSamplesPerSec;
 
     // I dunno if this is the best idea, but I'll give it a try...
@@ -242,6 +246,11 @@ static BOOL StartUp_SDLaudio( CSoundLibrary &sl, BOOL bReport=TRUE)
     desired.samples = 2048;
   else
     desired.samples = 4096;  // (*shrug*)
+
+#ifdef EMSCRIPTEN
+  desired.freq = sl.sl_SwfeFormat.nSamplesPerSec = 44100;
+  desired.samples = 2048;
+#endif
 
   desired.channels = sl.sl_SwfeFormat.nChannels;
   desired.userdata = &sl;
