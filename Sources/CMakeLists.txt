@@ -168,7 +168,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -marm -faligned-new -ffast-math")
             set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -marm -ffast-math")
         elseif(EMSCRIPTEN)
-            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
+            set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O3")
             set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
             set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
         else()
@@ -188,7 +188,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -marm -faligned-new -ffast-math")
             set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -marm -ffast-math")
         elseif (EMSCRIPTEN)
-            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
+            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
             set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
             set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -g4")
         else()
@@ -1225,9 +1225,11 @@ if (EMSCRIPTEN)
          '_CWorldBase_DLLClass',\
          '_CWorldLink_DLLClass',\
          '_CWorldSettingsController_DLLClass'\
-        ]\"\
-        -g4 --source-map-base http://localhost:5000/cmake-em-build/ \
+        ]\" \
+        --use-preload-cache \
       ")
+      # only if debug: -g4 --source-map-base http://localhost:5000/cmake-em-build/ \
+      # if release probably dont want to use preload cache
     set_target_properties(ssam PROPERTIES COMPILE_FLAGS "-s MAIN_MODULE=1 -s FULL_ES2=1")
 endif()
 

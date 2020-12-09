@@ -10,18 +10,28 @@ SRC_ROOT="$GIT_ROOT/Sources"
 set -e
 set -x
 
+BLD_LOC="cmake-em-build"
+BLD_TYPE="RelWithDebInfo"
+if [[ "$1" == "rel" ]]; then
+  BLD_LOC="cmake-rel"
+  BLD_TYPE="Release"
+  shift
+fi
+
+
+
 clean() {
-  rm -rf cmake-em-build
-  mkdir cmake-em-build
+  rm -rf $BLD_LOC
+  mkdir $BLD_LOC
 }
 
 cm() {
-  mkdir -p cmake-em-build
-  pushd cmake-em-build
+  mkdir -p $BLD_LOC
+  pushd $BLD_LOC
 
   emcmake cmake \
     -DECC="$GIT_ROOT/ecc" \
-    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_BUILD_TYPE=$BLD_TYPE \
     -DCMAKE_C_FLAGS=-m32 \
     -DCMAKE_CXX_FLAGS=-m32 \
     -DUSE_I386_NASM_ASM=FALSE \
@@ -37,29 +47,20 @@ cm() {
    popd
 }
 
-mk() {
-  echo "Then the rest..."
-  emmake make -C cmake-em-build ParseEntities
-  emmake make -C cmake-em-build EntitiesMP
-  emmake make -C cmake-em-build GameMP
-  emmake make -C cmake-em-build Shaders
-  emmake make -C cmake-em-build
-}
-
 mktarg() {
   if [[ -n "$1" ]]; then
-    emmake make -C cmake-em-build VERBOSE=1 "$1"
+    emmake make -C $BLD_LOC VERBOSE=1 "$1"
   else
-    emmake make -C cmake-em-build VERBOSE=1 
+    emmake make -C $BLD_LOC VERBOSE=1 
   fi
 }
 
 cpfiles() {
-  cp -vr "$GIT_ROOT"/template/* cmake-em-build/
+  cp -vr "$GIT_ROOT"/template/* $BLD_LOC/
 }
 
 serveit() {
-  npx serve "$GIT_ROOT"/cmake-em-build/
+  npx serve "$GIT_ROOT"/$BLD_LOC/
 }
 
 $*
