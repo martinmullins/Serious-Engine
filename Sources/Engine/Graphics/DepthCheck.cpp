@@ -64,6 +64,7 @@ static void UpdateDepthPointsVisibility( const CDrawPort *pdp, const INDEX iMirr
     _sfStats.StartTimer(CStatForm::STI_GFXAPI);
     FLOAT fPointOoK;
     // for each stored point
+#ifndef EMSCRIPTEN
     for( INDEX idi=0; idi<ctCount; idi++) {
       DepthInfo &di = pdi[idi];
       // skip if not in required mirror level or was already checked in this iteration
@@ -74,6 +75,7 @@ static void UpdateDepthPointsVisibility( const CDrawPort *pdp, const INDEX iMirr
       // it is visible if there is nothing nearer in z-buffer already
       di.di_bVisible = (di.di_fOoK<fPointOoK);
     }
+#endif
     // done
     _sfStats.StopTimer(CStatForm::STI_GFXAPI);
     return;
