@@ -35,6 +35,7 @@ Debug/
 
 # custom user build dirs
 /*build*
+/cmake-rel
 /Sources/*build*
 
 # Visual Studio
