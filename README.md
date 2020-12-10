@@ -2,7 +2,7 @@
 ========================
 
 Fork includes the changes made to get part of the engine working in the web browser with Emscripten.
-The PoC is deployed here: https://martinmullins.github.io/ssam
+The PoC is deployed here: https://martinmullins.github.io/ssam/
 
 
 # Serious Engine
